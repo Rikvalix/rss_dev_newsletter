@@ -1,3 +1,7 @@
 /target
 .idea/
 .vscode/
+
+# Google authentication
+client_secret.json
+token.json
