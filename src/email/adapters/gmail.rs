@@ -1,12 +1,15 @@
 extern crate google_gmail1 as gmail1;
 
 use crate::email::ports::email::EmailI;
-use crate::model::{Email, EmailStatus};
+use crate::model::{Email, EmailStatus, Sender};
 use chrono::DateTime;
 use gmail1::{hyper_rustls, hyper_util, yup_oauth2, Gmail};
-use google_gmail1::api::ModifyMessageRequest;
+use google_gmail1::api::{Message, ModifyMessageRequest};
 use google_gmail1::hyper_rustls::HttpsConnector;
 use google_gmail1::hyper_util::client::legacy::connect::HttpConnector;
+use regex::Regex;
+use std::str::FromStr;
+
 pub struct GmailAdapter {
     client: Gmail<HttpsConnector<HttpConnector>>,
     scope: String,
@@ -14,12 +17,17 @@ pub struct GmailAdapter {
 
 impl EmailI for GmailAdapter {
     async fn get_unread(&self) -> Vec<Email> {
+        const SENDER: &str = "dan@tldrnewsletter.com";
+
+        let mut query = "is:unread from:".to_string();
+        query.push_str(SENDER);
+
         // Get alls unread mails ids
         let (_, list) = self
             .client
             .users()
             .messages_list("me")
-            .q("is:unread")
+            .q(query.as_str())
             .add_scope(self.scope.as_str())
             .doit()
             .await
@@ -41,18 +49,15 @@ impl EmailI for GmailAdapter {
                     .await
                     .unwrap();
 
-                // Extract subject
-                let subject = msg
-                    .payload
-                    .as_ref()
-                    .and_then(|p| p.headers.as_ref())
-                    .and_then(|headers| {
-                        headers
-                            .iter()
-                            .find(|h| h.name == Some("Subject".to_string()))
-                            .and_then(|h| h.value.clone())
+                // Extract sender
+                let re = Regex::new(r"\s*<.*?>").unwrap();
+                let sender: Sender = Self::extract_from_header(&msg, "From".to_string())
+                    .as_deref()
+                    .map(|data| {
+                        let cleaned = re.replace_all(data, "");
+                        Sender::from_str(&cleaned).unwrap_or(Sender::ToSort)
                     })
-                    .unwrap_or_else(|| "No subject".to_string());
+                    .unwrap_or(Sender::ToSort);
 
                 // Extract content
                 let content: String = msg
@@ -82,7 +87,7 @@ impl EmailI for GmailAdapter {
                     id,
                     status: EmailStatus::UNREAD,
                     content,
-                    subject,
+                    sender,
                     receive_date,
                 });
             }
@@ -96,16 +101,13 @@ impl EmailI for GmailAdapter {
             remove_label_ids: Some(vec![status.to_string()]),
         };
 
-        let result = self
-            .client
+        self.client
             .users()
             .messages_modify(req, "me", &*email.id)
             .add_scope(self.scope.as_str())
             .doit()
             .await
             .expect("Update status failed for mail");
-
-        println!("Résultat: {}", result.0.status());
     }
 }
 
@@ -156,5 +158,19 @@ impl GmailAdapter {
             client: Gmail::new(client, auth),
             scope: String::from(scopes),
         }
+    }
+
+    fn extract_from_header(message: &Message, key: String) -> Option<String> {
+        message
+            .payload
+            .clone()
+            .unwrap()
+            .headers
+            .as_ref()
+            .and_then(|h| {
+                h.iter()
+                    .find(|h| h.name == Some(key.clone()))
+                    .and_then(|h| h.value.clone())
+            })
     }
 }

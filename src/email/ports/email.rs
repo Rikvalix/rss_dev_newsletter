@@ -1,6 +1,6 @@
 use crate::model::{Email, EmailStatus};
 
 pub trait EmailI {
-    async fn get_unread(&self) -> Vec<Email>;
-    async fn update_mail_status(&self, email: &Email, status: EmailStatus);
+    fn get_unread(&self) -> impl Future<Output = Vec<Email>> + Send;
+    fn update_mail_status(&self, email: &Email, status: EmailStatus) -> impl Future<Output = ()> + Send;
 }
