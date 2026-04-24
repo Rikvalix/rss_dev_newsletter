@@ -7,7 +7,6 @@ use gmail1::{hyper_rustls, hyper_util, yup_oauth2, Gmail};
 use google_gmail1::api::ModifyMessageRequest;
 use google_gmail1::hyper_rustls::HttpsConnector;
 use google_gmail1::hyper_util::client::legacy::connect::HttpConnector;
-
 pub struct GmailAdapter {
     client: Gmail<HttpsConnector<HttpConnector>>,
     scope: String,
@@ -36,6 +35,7 @@ impl EmailI for GmailAdapter {
                     .client
                     .users()
                     .messages_get("me", &id)
+                    .format("full") // Get the entire message
                     .add_scope(self.scope.as_str())
                     .doit()
                     .await
@@ -54,6 +54,26 @@ impl EmailI for GmailAdapter {
                     })
                     .unwrap_or_else(|| "No subject".to_string());
 
+                // Extract content
+                let content: String = msg
+                    .payload
+                    .as_ref()
+                    .and_then(|payload| {
+                        let direct_data = payload.body.as_ref().and_then(|b| b.data.as_ref());
+
+                        if let Some(data) = direct_data {
+                            Some(String::from_utf8_lossy(data).into_owned())
+                        } else {
+                            payload.parts.as_ref()?.iter().find_map(|part| {
+                                part.body
+                                    .as_ref()
+                                    .and_then(|b| b.data.as_ref())
+                                    .map(|data| String::from_utf8_lossy(data).into_owned())
+                            })
+                        }
+                    })
+                    .unwrap_or_else(|| "No content".to_string());
+
                 // Date
                 let receive_date = DateTime::from_timestamp_millis(msg.internal_date.unwrap_or(0))
                     .expect("Could not parse receive date");
@@ -61,7 +81,7 @@ impl EmailI for GmailAdapter {
                 emails.push(Email {
                     id,
                     status: EmailStatus::UNREAD,
-                    content: msg.snippet.unwrap_or_default(),
+                    content,
                     subject,
                     receive_date,
                 });
@@ -119,7 +139,7 @@ impl GmailAdapter {
         let scopes = "https://www.googleapis.com/auth/gmail.modify";
         auth.token(&[scopes])
             .await
-            .expect("Échec de l'obtention initiale du token");
+            .expect("Fail to init the Google token");
 
         let client =
             hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
