@@ -1,0 +1,8 @@
+mode = "dev"
+
+[git_settings]
+enable = false
+branch = "develop"
+
+[storage_settings]
+repository_path = "tldr_newsletter_storage"
