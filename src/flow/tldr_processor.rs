@@ -20,7 +20,9 @@ pub async fn tldr_process(client: &impl EmailI, settings: &Settings) {
             &mail.content,
         )
         .unwrap();
-        client.update_mail_status(&mail, EmailStatus::UNREAD).await;
+        if settings.tldr_settings.mark_email_as_read {
+            client.update_mail_status(&mail, EmailStatus::UNREAD).await;
+        }
     }
 
     info!("Ending TLDR process ")

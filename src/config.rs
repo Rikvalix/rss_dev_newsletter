@@ -5,10 +5,15 @@ use std::env;
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub mode: String,
+    pub tldr_settings: TldrSettings,
     pub git_settings: GitSettings,
     pub storage_settings: StorageSettings,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct TldrSettings {
+    pub mark_email_as_read: bool
+}
 #[derive(Debug, Deserialize)]
 pub struct GitSettings {
     pub enable: bool,
