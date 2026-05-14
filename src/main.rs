@@ -5,6 +5,7 @@ use tldr_newsletter::flow::tldr_processor::tldr_process;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let settings = Settings::new().expect("Could not load settings");
     info!("Configuration is setup");
 
