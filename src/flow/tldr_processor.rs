@@ -10,7 +10,6 @@ pub async fn tldr_process(client: &impl EmailI, settings: &Settings) {
     // Fetch unread mails
     let unread_mails = client.get_unread().await;
 
-    info!("Unread mails: {:?}", unread_mails);
 
     for mail in unread_mails.iter() {
         let path = format_repository_path(&settings.storage_settings.repository_path, &mail.sender);
