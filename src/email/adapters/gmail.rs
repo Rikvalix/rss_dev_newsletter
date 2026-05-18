@@ -8,6 +8,8 @@ use google_gmail1::api::{Message, ModifyMessageRequest};
 use google_gmail1::hyper_rustls::HttpsConnector;
 use google_gmail1::hyper_util::client::legacy::connect::HttpConnector;
 use regex::Regex;
+use std::env;
+use std::path::PathBuf;
 use std::str::FromStr;
 
 pub struct GmailAdapter {
@@ -113,8 +115,17 @@ impl EmailI for GmailAdapter {
 
 impl GmailAdapter {
     pub async fn new() -> Self {
+        let mut path: PathBuf = if let Ok(cargo_dir) = env::var("CARGO_MANIFEST_DIR") {
+            let dev_path = PathBuf::from(cargo_dir);
+            dev_path
+        } else {
+            let mut exec_path = env::current_exe().unwrap();
+            exec_path.pop();
+            exec_path
+        };
+        path.push("client_secret.json");
         let secret: yup_oauth2::ApplicationSecret =
-            yup_oauth2::read_application_secret("client_secret.json")
+            yup_oauth2::read_application_secret(path)
                 .await
                 .expect("Fail to read application secret file: client_secret.json");
 
