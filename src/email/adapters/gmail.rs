@@ -2,6 +2,7 @@ extern crate google_gmail1 as gmail1;
 
 use crate::email::ports::email::EmailI;
 use crate::model::{Email, EmailStatus, Sender};
+use crate::utils::path_utils::get_current_exec_path;
 use chrono::DateTime;
 use gmail1::{hyper_rustls, hyper_util, yup_oauth2, Gmail};
 use google_gmail1::api::{Message, ModifyMessageRequest};
@@ -113,8 +114,13 @@ impl EmailI for GmailAdapter {
 
 impl GmailAdapter {
     pub async fn new() -> Self {
+        let exec_path = get_current_exec_path();
+        
+        let mut json_path = exec_path.clone();
+        json_path.push("client_secret.json");
+
         let secret: yup_oauth2::ApplicationSecret =
-            yup_oauth2::read_application_secret("client_secret.json")
+            yup_oauth2::read_application_secret(json_path)
                 .await
                 .expect("Fail to read application secret file: client_secret.json");
 
@@ -126,6 +132,9 @@ impl GmailAdapter {
             .build();
 
         let executor = hyper_util::rt::TokioExecutor::new();
+
+        let mut token_path = exec_path;
+        token_path.push("token.json");
         let auth = yup_oauth2::InstalledFlowAuthenticator::with_client(
             secret,
             yup_oauth2::InstalledFlowReturnMethod::HTTPRedirect,
@@ -133,7 +142,7 @@ impl GmailAdapter {
                 hyper_util::client::legacy::Client::builder(executor).build(connector),
             ),
         )
-        .persist_tokens_to_disk("token.json")
+        .persist_tokens_to_disk(token_path)
         .build()
         .await
         .unwrap();

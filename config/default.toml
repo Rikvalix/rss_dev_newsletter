@@ -5,7 +5,7 @@ mark_email_as_read = false
 
 [git_settings]
 enable = false
-branch = "develop"
+branch = "main"
 
 [storage_settings]
 repository_path = "tldr_newsletter_storage"

@@ -1,6 +1,6 @@
 use config::{Config, ConfigError};
 use serde::Deserialize;
-use std::env;
+use std::{env, path::PathBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
@@ -27,12 +27,23 @@ pub struct StorageSettings {
 
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
+
+        let path: PathBuf = if let Ok(cargo_dir) = env::var("CARGO_MANIFEST_DIR") {
+            let mut dev_path = PathBuf::from(cargo_dir);
+            dev_path.push("config");
+            dev_path 
+        } else {
+            let mut exec_path = env::current_exe().unwrap();
+            exec_path.pop();
+            exec_path.push("config");
+            exec_path 
+        };
+
         let run_mode = env::var("RUN_MODE").unwrap_or_else(|_| "dev".into());
         let config_builder = Config::builder()
-            .add_source(config::File::with_name("config/default"))
-            .add_source(config::File::with_name(&format!("config/{}", run_mode)).required(false))
+            .add_source(config::File::with_name(&format!("{}/default",path.to_str().unwrap())))
+            .add_source(config::File::with_name(&format!("{}/config/{}", path.to_str().unwrap(),run_mode)).required(false))
             .add_source(config::Environment::with_prefix("APP"));
-
         config_builder.build()?.try_deserialize()
     }
 }
