@@ -8,6 +8,7 @@ pub struct Settings {
     pub tldr_settings: TldrSettings,
     pub git_settings: GitSettings,
     pub storage_settings: StorageSettings,
+    pub ai_settings: AiSettings
 }
 
 #[derive(Debug, Deserialize)]
@@ -23,6 +24,14 @@ pub struct GitSettings {
 #[derive(Debug, Deserialize)]
 pub struct StorageSettings {
     pub repository_path: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AiSettings {
+    pub api_key: String,
+    pub model: String,
+    pub system_prompt_path: String,
+    pub user_prompt_path: String,
 }
 
 impl Settings {

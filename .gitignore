@@ -5,3 +5,4 @@
 # Google authentication
 client_secret.json
 token.json
+config/default.toml

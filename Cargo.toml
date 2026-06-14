@@ -14,3 +14,4 @@ serde = { version = "1.0.228", features = ["derive"] }
 config = "0.15.22"
 log = "0.4.29"
 env_logger = "0.11.10"
+gemini-rust = "1.7.1"
