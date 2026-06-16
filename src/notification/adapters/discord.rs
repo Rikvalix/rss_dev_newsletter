@@ -1,0 +1,57 @@
+use serde_json::json;
+
+pub struct DiscordAdapter {
+    client: reqwest::Client,
+    base_url: String,
+}
+
+impl DiscordAdapter {
+
+    // Send message on the discord webhook, split it if the len is more than 2000
+    pub async fn send_message(&self, message: &str) -> Result<(), reqwest::Error> {
+        if message.chars().count() <= 2000 {
+            self.send(message).await?;
+        } else {
+            let mut current_chunk = String::new();
+            let mut char_count = 0;
+
+            for c in message.chars() {
+                if char_count == 2000 {
+                    self.send(&current_chunk).await?;
+                    current_chunk.clear();
+                    char_count = 0;
+                }
+                current_chunk.push(c);
+                char_count += 1;
+            }
+
+            if !current_chunk.is_empty() {
+                self.send(&current_chunk).await?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn send(&self, message: &str) -> Result<(), reqwest::Error> {
+        let payload = json!({
+            "content": message.to_string(),
+        });
+
+        self.client
+            .post(self.base_url.clone())
+            .json(&payload)
+            .send()
+            .await?;
+
+        Ok(())
+    }
+}
+
+impl DiscordAdapter {
+    pub fn new(webhook_url: &str) -> Self {
+        DiscordAdapter {
+            client: reqwest::Client::new(),
+            base_url: webhook_url.to_string(),
+        }
+    }
+}

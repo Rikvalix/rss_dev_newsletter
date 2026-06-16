@@ -1,17 +1,25 @@
 mode = "dev"
 
-[tldr_settings]
+[tldr]
 mark_email_as_read = false
 
-[git_settings]
+[git]
 enable = false
 branch = "main"
 
-[storage_settings]
+[storage]
 repository_path = "tldr_newsletter_storage"
 
-[ai_settings]
+[ai]
+enable = true
 api_key= ""
 model = "models/gemini-2.5-pro"
 system_prompt_path = "ai_system_prompt.txt"
 user_prompt_path = "ai_user_message.txt"
+
+
+[notification]
+
+[notification.discord]
+enable = true
+webhook_url = ""

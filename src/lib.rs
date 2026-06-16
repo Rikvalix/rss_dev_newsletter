@@ -5,3 +5,5 @@ pub mod model;
 pub mod storage;
 pub mod utils;
 pub mod ai;
+
+pub mod notification;

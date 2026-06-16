@@ -1,6 +1,6 @@
 use crate::ai::ports::ai_i::AiI;
 use crate::ai::prompt_loader::{load_ai_instruction, load_ai_message};
-use crate::config::AiSettings;
+use crate::config::AiProperties;
 use gemini_rust::Model::Gemini25Flash;
 use gemini_rust::{FileHandle, Gemini};
 use log::info;
@@ -34,18 +34,14 @@ impl AiI for GeminiAdapter {
             .await
             .unwrap_or_else(|err| panic!("Failed to generate resume: {}", err));
 
-        info!(
-            "Response: \nId: {:?} \nContent: {:?}",
-            response.response_id,
-            response.text()
-        );
-
+        info!("Response Id: {:?}",response.response_id);
+        
         response.text()
     }
 }
 
 impl GeminiAdapter {
-    pub fn new(ai_settings: &AiSettings) -> Self {
+    pub fn new(ai_settings: &AiProperties) -> Self {
         let client = Gemini::with_model(&ai_settings.api_key, Gemini25Flash)
             .unwrap_or_else(|e| panic!("Unable to create Gemini client: {}", e));
 
@@ -78,6 +74,7 @@ impl GeminiAdapter {
         file
     }
 
+    pub async fn list_all_files(&self) {}
     pub async fn clear_files() {}
 
     pub async fn count_token() {}

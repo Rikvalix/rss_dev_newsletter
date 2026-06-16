@@ -3,38 +3,51 @@ use serde::Deserialize;
 use std::{env, path::PathBuf};
 
 #[derive(Debug, Deserialize)]
-pub struct Settings {
+pub struct GlobalProperties {
     pub mode: String,
-    pub tldr_settings: TldrSettings,
-    pub git_settings: GitSettings,
-    pub storage_settings: StorageSettings,
-    pub ai_settings: AiSettings
+    pub tldr: TldrProperties,
+    pub git: GitProperties,
+    pub storage: StorageProperties,
+    pub ai: AiProperties,
+    pub notification: NotificationProperties,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct TldrSettings {
+pub struct TldrProperties {
     pub mark_email_as_read: bool
 }
 #[derive(Debug, Deserialize)]
-pub struct GitSettings {
+pub struct GitProperties {
     pub enable: bool,
     pub branch: String,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct StorageSettings {
+pub struct StorageProperties {
     pub repository_path: String,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct AiSettings {
+pub struct AiProperties {
+    pub enable: bool,
     pub api_key: String,
     pub model: String,
     pub system_prompt_path: String,
     pub user_prompt_path: String,
 }
 
-impl Settings {
+#[derive(Debug, Deserialize)]
+pub struct NotificationProperties {
+    pub discord: DiscordProperties
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DiscordProperties {
+    pub enable: bool,
+    pub webhook_url: String,
+}
+
+impl GlobalProperties {
     pub fn new() -> Result<Self, ConfigError> {
 
         let path: PathBuf = if let Ok(cargo_dir) = env::var("CARGO_MANIFEST_DIR") {
