@@ -1,4 +1,5 @@
 use log::info;
+use std::path::PathBuf;
 use tldr_newsletter::ai::adapters::gemini::GeminiAdapter;
 use tldr_newsletter::config::GlobalProperties;
 use tldr_newsletter::email::adapters::gmail::GmailAdapter;
@@ -21,22 +22,15 @@ async fn main() {
     let ai_client = GeminiAdapter::new(&settings.ai);
     info!("AI client is setup");
 
-    let discord_client =
-        DiscordAdapter::new(&settings.notification.discord.webhook_url);
+    let discord_client = DiscordAdapter::new(&settings.notification.discord.webhook_url);
     // TODO: Add configuration provider to load interface instead of adapter
 
     info!("Run TLDR processor");
-    tldr_process(&email_client, &settings).await;
+    let files: Vec<PathBuf> = tldr_process(&email_client, &settings).await;
 
     if settings.ai.enable {
         info!("Run Ai processor");
-        ai_processor(
-            &ai_client,
-            &discord_client,
-            "tldr_newsletter_storage/TLDR_Dev/article_2026-05-19.md",
-            "dev_article_2026_05_19.md",
-        )
-        .await;
+        ai_processor(&ai_client, &discord_client, &files).await;
     } else {
         info!("Ai processor disabled");
     }

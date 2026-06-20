@@ -1,4 +1,6 @@
-pub trait AiI {
+use crate::ai::error::AiError;
+use std::path::PathBuf;
 
-    fn generate_resume(&self, file_path: &str, file_name: &str) -> impl Future<Output = String>;
+pub trait AiI {
+    fn generate_resume(&self, path_file: &PathBuf) -> impl Future<Output = Result<String,AiError>>;
 }
