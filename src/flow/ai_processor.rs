@@ -66,12 +66,10 @@ pub async fn ai_processor(
         content_response += &resp;
     }
 
-    let global_resume_path: String =
-        format_file_path(resume_path, "resume", &Local::now().date_naive());
+    let global_resume_path: String = format_file_path(resume_path, "resume", &Local::now().date_naive());
     create_file(global_resume_path.as_str(), &content_response);
 
     info!("Processing general resume");
-    let global_resume_path: String = String::from("ai_resume/resume_2026-06-21.md");
     let global_resume = ai_client
         .generate_resume(
             &PathBuf::from(global_resume_path),
