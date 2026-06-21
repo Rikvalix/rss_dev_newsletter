@@ -30,7 +30,7 @@ async fn main() {
 
     if settings.ai.enable {
         info!("Run Ai processor");
-        ai_processor(&ai_client, &discord_client, &files).await;
+        ai_processor(&settings.ai, &ai_client, &discord_client, &files).await;
     } else {
         info!("Ai processor disabled");
     }

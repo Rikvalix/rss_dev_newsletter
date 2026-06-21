@@ -16,7 +16,7 @@ pub async fn tldr_process(client: &impl EmailI, settings: &GlobalProperties) -> 
         let path = format_repository_path(&settings.storage.repository_path, &mail.sender);
         check_or_create_folder(&*path).unwrap();
         let file = create_file(
-            &format_file_path(&path, &mail.receive_date.naive_local().date()),
+            &format_file_path(&path, "article",&mail.receive_date.naive_local().date()),
             &mail.content,
         );
         file_array.push(file);

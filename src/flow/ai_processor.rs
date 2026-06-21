@@ -1,10 +1,16 @@
 use crate::ai::error::AiError;
 use crate::ai::ports::ai_i::AiI;
+use crate::config::AiProperties;
 use crate::notification::adapters::discord::DiscordAdapter;
+use crate::storage;
+use crate::storage::create_file;
+use crate::utils::file_format_utils::format_file_path;
+use chrono::Local;
 use log::info;
 use std::path::PathBuf;
 
 pub async fn ai_processor(
+    ai_config: &AiProperties,
     ai_client: &impl AiI,
     discord_client: &DiscordAdapter,
     files: &Vec<PathBuf>,
@@ -12,25 +18,54 @@ pub async fn ai_processor(
     info!("Starting AI processor");
     info!("{} files ", files.len());
 
-    //let mut responses: Vec<String> = Vec::new();
+    let mut responses: Vec<String> = Vec::new();
 
     for file in files.into_iter() {
-        //responses.push(ai_client.generate_resume(file).await);
-        let response: Result<String, AiError> = ai_client.generate_resume(file).await;
+        info!("Processing file {}", file.display());
+        let response: Result<String, AiError> = ai_client
+            .generate_resume(
+                file,
+                &ai_config.system_prompt_path,
+                &ai_config.user_prompt_path,
+            )
+            .await;
+
         match response {
             Ok(resp) => {
-                discord_client
-                    .send_message(resp.as_str())
-                    .await
-                    .expect("Could not send message to Discord");
+                responses.push(resp);
             }
             Err(err) => {
+                let mut message_truncate = err.message.clone();
+                message_truncate.truncate(500);
+                message_truncate.push_str("...");
                 discord_client
-                    .send_message(err.message.as_str())
+                    .send_message(message_truncate.as_str())
                     .await
                     .expect("Could not send message to Discord");
                 panic!("AI processor error: {}", err)
             }
         }
     }
+
+    info!("{} responses are processed", responses.len());
+
+    let resume_path = "ai_resume";
+    storage::check_or_create_folder(&resume_path)
+        .expect("Unable to check or create folder ai_resume");
+
+    let mut content_response: String = String::new();
+
+    for resp in responses.into_iter() {
+        content_response += "\n--------\n";
+        content_response += &resp;
+    }
+
+    create_file(
+        format_file_path(resume_path, "resume", &Local::now().date_naive()).as_str(),
+        &content_response,
+    );
+
+    info!("Processing general resume");
+
+    //let resume = ai_client.generate_resume(, "", "")
 }

@@ -3,7 +3,6 @@ use crate::ai::ports::ai_i::AiI;
 use crate::ai::prompt_loader::{load_ai_instruction, load_ai_message};
 use crate::config::AiProperties;
 use gemini_rust::client::Error;
-use gemini_rust::Model::Gemini25Flash;
 use gemini_rust::{FileHandle, Gemini, GenerationResponse};
 use log::info;
 use std::fs::File;
@@ -12,8 +11,6 @@ use std::path::PathBuf;
 
 pub struct GeminiAdapter {
     client: Gemini,
-    system_prompt_path: String,
-    user_prompt_path: String,
 }
 
 impl AiI for GeminiAdapter {
@@ -22,14 +19,19 @@ impl AiI for GeminiAdapter {
        - Add function to count input token
     */
 
-    async fn generate_resume(&self, path_file: &PathBuf) -> Result<String, AiError> {
+    async fn generate_resume(
+        &self,
+        path_file: &PathBuf,
+        system_prompt: &str,
+        user_prompt: &str,
+    ) -> Result<String, AiError> {
         let file_handle = self.upload_file(path_file).await;
 
         let response: Result<GenerationResponse, Error> = self
             .client
             .generate_content()
-            .with_system_prompt(load_ai_instruction(&self.system_prompt_path))
-            .with_user_message_and_file(load_ai_message(&self.user_prompt_path), &file_handle)
+            .with_system_prompt(load_ai_instruction(&system_prompt))
+            .with_user_message_and_file(load_ai_message(&user_prompt), &file_handle)
             .unwrap_or_else(|err| panic!("Error while generating file: {}", err))
             .execute()
             .await;
@@ -43,14 +45,10 @@ impl AiI for GeminiAdapter {
 
 impl GeminiAdapter {
     pub fn new(ai_settings: &AiProperties) -> Self {
-        let client = Gemini::with_model(&ai_settings.api_key, Gemini25Flash)
+        info!("Initializing Gemini client with model: {}",ai_settings.model);
+        let client = Gemini::with_model(&ai_settings.api_key, ai_settings.model.clone())
             .unwrap_or_else(|e| panic!("Unable to create Gemini client: {}", e));
-
-        GeminiAdapter {
-            client,
-            system_prompt_path: ai_settings.system_prompt_path.clone(),
-            user_prompt_path: ai_settings.user_prompt_path.clone(),
-        }
+        GeminiAdapter { client }
     }
 
     pub async fn upload_file(&self, file_path: &PathBuf) -> FileHandle {
@@ -83,16 +81,16 @@ impl GeminiAdapter {
 
     pub fn handle_error(&self, err: &Error) -> AiError {
         match err {
-            Error::BadResponse { code, description } =>{
-                let mut description_truncate = description.as_ref().unwrap().to_owned();
-                description_truncate.truncate(200);
-                description_truncate.push_str("...");
+            Error::BadResponse { code, description } => {
                 AiError {
-                    message: format!("Bad response with code {}, description: {}",code, description_truncate),
+                    message: format!(
+                        "Bad response with code {}, description: {}",
+                        code, description.as_ref().unwrap()
+                    ),
                 }
-            } ,
+            }
             _ => AiError {
-                message: format!("Unknown error: {}", err)
+                message: format!("Unknown error: {}", err),
             },
         }
     }
