@@ -16,6 +16,12 @@ pub async fn ai_processor(
     files: &Vec<PathBuf>,
 ) {
     info!("Starting AI processor");
+
+    if files.len() == 0 {
+        info!("No files to process");
+        return;
+    }
+
     info!("{} files ", files.len());
 
     let mut responses: Vec<String> = Vec::new();
@@ -25,7 +31,7 @@ pub async fn ai_processor(
         let response: Result<String, AiError> = ai_client
             .generate_resume(
                 file,
-                &ai_config.system_prompt_path,
+                &ai_config.article_resume_system_prompt_path,
                 &ai_config.user_prompt_path,
             )
             .await;
@@ -60,12 +66,36 @@ pub async fn ai_processor(
         content_response += &resp;
     }
 
-    create_file(
-        format_file_path(resume_path, "resume", &Local::now().date_naive()).as_str(),
-        &content_response,
-    );
+    let global_resume_path: String =
+        format_file_path(resume_path, "resume", &Local::now().date_naive());
+    create_file(global_resume_path.as_str(), &content_response);
 
     info!("Processing general resume");
+    let global_resume_path: String = String::from("ai_resume/resume_2026-06-21.md");
+    let global_resume = ai_client
+        .generate_resume(
+            &PathBuf::from(global_resume_path),
+            &ai_config.global_resume_system_prompt_path,
+            &ai_config.user_prompt_path,
+        )
+        .await;
 
-    //let resume = ai_client.generate_resume(, "", "")
+    match global_resume {
+        Ok(global_resume) => {
+            discord_client
+                .send_message(global_resume.as_str())
+                .await
+                .expect("Could not send message to Discord");
+        }
+        Err(err) => {
+            let mut message_truncate = err.message.clone();
+            message_truncate.truncate(500);
+            message_truncate.push_str("...");
+            discord_client
+                .send_message(message_truncate.as_str())
+                .await
+                .expect("Could not send message to Discord");
+            panic!("AI processor error: {}", err)
+        }
+    }
 }

@@ -6,3 +6,5 @@
 client_secret.json
 token.json
 config/default.toml
+tldr_newsletter_storage/
+ai_resume/

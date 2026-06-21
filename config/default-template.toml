@@ -14,7 +14,8 @@ repository_path = "tldr_newsletter_storage"
 enable = true
 api_key= ""
 model = "models/gemini-2.5-pro"
-system_prompt_path = "ai_system_prompt.txt"
+article_resume_system_prompt_path = "ai_article_resume_system_prompt.txt"
+global_resume_system_prompt_path = ""
 user_prompt_path = "ai_user_message.txt"
 
 

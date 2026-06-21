@@ -32,7 +32,8 @@ pub struct AiProperties {
     pub enable: bool,
     pub api_key: String,
     pub model: String,
-    pub system_prompt_path: String,
+    pub article_resume_system_prompt_path: String,
+    pub global_resume_system_prompt_path: String,
     pub user_prompt_path: String,
 }
 

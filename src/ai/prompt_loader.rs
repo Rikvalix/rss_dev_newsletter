@@ -1,11 +1,8 @@
 use crate::utils::path_utils::get_current_exec_path;
-use log::info;
 use std::fs;
 
 // Load ai system prompt
 pub fn load_ai_instruction(file_path: &str) -> String {
-    info!("Loading AI instruction");
-
     fs::read_to_string(get_ai_directory(&file_path))
         .unwrap_or_else(|_| panic!("Failed to load ai instruction from {}", file_path))
 }
