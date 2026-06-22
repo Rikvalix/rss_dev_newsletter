@@ -1,6 +1,7 @@
 use log::info;
 use std::path::PathBuf;
 use tldr_newsletter::ai::adapters::gemini::GeminiAdapter;
+use tldr_newsletter::ai::ports::ai_i::AiI;
 use tldr_newsletter::config::GlobalProperties;
 use tldr_newsletter::email::adapters::gmail::GmailAdapter;
 use tldr_newsletter::flow::ai_processor::ai_processor;

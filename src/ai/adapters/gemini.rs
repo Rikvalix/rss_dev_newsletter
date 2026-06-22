@@ -18,6 +18,15 @@ impl AiI for GeminiAdapter {
        - Add function to clear files
        - Add function to count input token
     */
+    fn new(ai_settings: &AiProperties) -> Self {
+        info!(
+            "Initializing Gemini client with model: {}",
+            ai_settings.model
+        );
+        let client = Gemini::with_model(&ai_settings.api_key, ai_settings.model.clone())
+            .unwrap_or_else(|e| panic!("Unable to create Gemini client: {}", e));
+        GeminiAdapter { client }
+    }
 
     async fn generate_resume(
         &self,
@@ -44,13 +53,6 @@ impl AiI for GeminiAdapter {
 }
 
 impl GeminiAdapter {
-    pub fn new(ai_settings: &AiProperties) -> Self {
-        info!("Initializing Gemini client with model: {}",ai_settings.model);
-        let client = Gemini::with_model(&ai_settings.api_key, ai_settings.model.clone())
-            .unwrap_or_else(|e| panic!("Unable to create Gemini client: {}", e));
-        GeminiAdapter { client }
-    }
-
     pub async fn upload_file(&self, file_path: &PathBuf) -> FileHandle {
         // Extract bytes from the file
         let mut mut_file = File::open(file_path).expect("Could not open file");
@@ -81,14 +83,13 @@ impl GeminiAdapter {
 
     pub fn handle_error(&self, err: &Error) -> AiError {
         match err {
-            Error::BadResponse { code, description } => {
-                AiError {
-                    message: format!(
-                        "Bad response with code {}, description: {}",
-                        code, description.as_ref().unwrap()
-                    ),
-                }
-            }
+            Error::BadResponse { code, description } => AiError {
+                message: format!(
+                    "Bad response with code {}, description: {}",
+                    code,
+                    description.as_ref().unwrap()
+                ),
+            },
             _ => AiError {
                 message: format!("Unknown error: {}", err),
             },
