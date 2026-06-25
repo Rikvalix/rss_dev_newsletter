@@ -1,7 +1,7 @@
 use crate::ai::error::AiError;
 use crate::ai::ports::ai_i::AiI;
 use crate::config::AiProperties;
-use crate::notification::adapters::discord::DiscordAdapter;
+use crate::notification::ports::notification_i::NotificationI;
 use crate::storage;
 use crate::storage::create_file;
 use crate::utils::file_format_utils::format_file_path;
@@ -12,7 +12,7 @@ use std::path::PathBuf;
 pub async fn ai_processor(
     ai_config: &AiProperties,
     ai_client: &impl AiI,
-    discord_client: &DiscordAdapter,
+    discord_client: &impl NotificationI,
     files: &Vec<PathBuf>,
 ) {
     info!("Starting AI processor");

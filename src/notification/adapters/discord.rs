@@ -1,3 +1,4 @@
+use crate::notification::ports::notification_i::NotificationI;
 use serde_json::json;
 
 pub struct DiscordAdapter {
@@ -5,10 +6,10 @@ pub struct DiscordAdapter {
     base_url: String,
 }
 
-impl DiscordAdapter {
+impl NotificationI for  DiscordAdapter {
 
     // Send message on the discord webhook, split it if the len is more than 2000
-    pub async fn send_message(&self, message: &str) -> Result<(), reqwest::Error> {
+    async fn send_message(&self, message: &str) -> Result<(), reqwest::Error> {
         if message.chars().count() <= 2000 {
             self.send(message).await?;
         } else {
@@ -32,6 +33,17 @@ impl DiscordAdapter {
         Ok(())
     }
 
+
+}
+
+impl DiscordAdapter {
+    pub fn new(webhook_url: &str) -> Self {
+        DiscordAdapter {
+            client: reqwest::Client::new(),
+            base_url: webhook_url.to_string(),
+        }
+    }
+
     async fn send(&self, message: &str) -> Result<(), reqwest::Error> {
         let payload = json!({
             "content": message.to_string(),
@@ -44,14 +56,5 @@ impl DiscordAdapter {
             .await?;
 
         Ok(())
-    }
-}
-
-impl DiscordAdapter {
-    pub fn new(webhook_url: &str) -> Self {
-        DiscordAdapter {
-            client: reqwest::Client::new(),
-            base_url: webhook_url.to_string(),
-        }
     }
 }
