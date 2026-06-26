@@ -30,6 +30,7 @@ pub struct StorageProperties {
 #[derive(Debug, Deserialize)]
 pub struct AiProperties {
     pub enable: bool,
+    pub url: String,
     pub api_key: String,
     pub model: String,
     pub article_resume_system_prompt_path: String,

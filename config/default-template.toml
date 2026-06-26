@@ -13,6 +13,7 @@ repository_path = "tldr_newsletter_storage"
 [ai]
 enable = true
 api_key= ""
+url = ""
 model = "models/gemini-2.5-pro"
 article_resume_system_prompt_path = "ai_article_resume_system_prompt.txt"
 global_resume_system_prompt_path = ""
