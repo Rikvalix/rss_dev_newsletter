@@ -19,7 +19,7 @@ impl AiI for OllamaAdapter {
         }
     }
 
-    fn generate_resume(&self, path_file: &PathBuf, system_prompt: &str, user_prompt: &str) -> Result<String, AiError>{
-        todo!();
+    async fn generate_resume(&self, path_file: &PathBuf, system_prompt: &str, user_prompt: &str) -> Result<String, AiError>{
+        Ok("".to_string())
     }
 }

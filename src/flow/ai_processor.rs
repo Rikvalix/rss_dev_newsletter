@@ -9,10 +9,20 @@ use chrono::Local;
 use log::info;
 use std::path::PathBuf;
 
+/// Generate resume for each emails and last one global resume which be send.
+///
+/// # Arguments
+///
+/// * `ai_config`: Ai configuration
+/// * `ai_client`: Ai client, use to generate resume
+/// * `notification_client`: Notification client, share status and resume
+/// * `files`: List of paths to analyse
+///
+/// returns: ()
 pub async fn ai_processor(
     ai_config: &AiProperties,
     ai_client: &impl AiI,
-    discord_client: &impl NotificationI,
+    notification_client: &impl NotificationI,
     files: &Vec<PathBuf>,
 ) {
     info!("Starting AI processor");
@@ -44,7 +54,7 @@ pub async fn ai_processor(
                 let mut message_truncate = err.message.clone();
                 message_truncate.truncate(500);
                 message_truncate.push_str("...");
-                discord_client
+                notification_client
                     .send_message(message_truncate.as_str())
                     .await
                     .expect("Could not send message to Discord");
@@ -80,7 +90,7 @@ pub async fn ai_processor(
 
     match global_resume {
         Ok(global_resume) => {
-            discord_client
+            notification_client
                 .send_message(global_resume.as_str())
                 .await
                 .expect("Could not send message to Discord");
@@ -89,7 +99,7 @@ pub async fn ai_processor(
             let mut message_truncate = err.message.clone();
             message_truncate.truncate(500);
             message_truncate.push_str("...");
-            discord_client
+            notification_client
                 .send_message(message_truncate.as_str())
                 .await
                 .expect("Could not send message to Discord");

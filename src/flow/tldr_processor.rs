@@ -6,6 +6,14 @@ use crate::utils::file_format_utils::{format_file_path, format_repository_path};
 use log::info;
 use std::path::PathBuf;
 
+/// Fetches unread emails and store it in the repository
+///
+/// # Arguments
+///
+/// * `client`: Email client, use to fetch email
+/// * `settings`: Global configuration
+///
+/// returns: Vec<PathBuf, Global>
 pub async fn tldr_process(client: &impl EmailI, settings: &GlobalProperties) -> Vec<PathBuf> {
     info!("Starting TLDR process");
     // Fetch unread mails

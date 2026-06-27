@@ -2,9 +2,27 @@ use crate::ai::error::AiError;
 use crate::config::AiProperties;
 use std::path::PathBuf;
 
+/// Ai client interface to create resume from the differents emails
 pub trait AiI {
 
+    /// Create new client instance
+    ///
+    /// # Arguments
+    ///
+    /// * `ai_settings`: Configuration
+    ///
+    /// returns: Self
     fn new(ai_settings: &AiProperties) -> Self;
+
+    /// Generate resume for specific file
+    ///
+    /// # Arguments
+    ///
+    /// * `path_file`: File with the content to resume
+    /// * `system_prompt`: Prompt system
+    /// * `user_prompt`: User prompt
+    ///
+    /// returns: impl Future<Output=Result<String, AiError>>
     fn generate_resume(&self, path_file: &PathBuf, system_prompt: &str, user_prompt: &str) -> impl Future<Output = Result<String,AiError>>;
 
 
