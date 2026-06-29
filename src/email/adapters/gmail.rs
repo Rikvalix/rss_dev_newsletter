@@ -1,14 +1,12 @@
-extern crate google_gmail1 as gmail1;
-
 use crate::email::error::EmailError;
 use crate::email::ports::email::EmailI;
 use crate::model::{Email, EmailStatus, Sender};
 use crate::utils::path_utils::get_current_exec_path;
 use chrono::DateTime;
-use gmail1::{hyper_rustls, hyper_util, yup_oauth2, Gmail};
 use google_gmail1::api::{Message, ModifyMessageRequest};
 use google_gmail1::hyper_rustls::HttpsConnector;
 use google_gmail1::hyper_util::client::legacy::connect::HttpConnector;
+use google_gmail1::{hyper_rustls, hyper_util, yup_oauth2, Gmail};
 use log::warn;
 use regex::Regex;
 use std::str::FromStr;
