@@ -1,12 +1,18 @@
+use crate::email::error::EmailError;
 use crate::model::{Email, EmailStatus};
 
 /// Email client interface for fetching and managing TLDR newsletter emails
-pub trait EmailI {
+pub trait EmailI: Sized {
+
+    /// Create new email client instance
+    ///
+    /// returns: impl Future<Output = Result<Self, EmailError>>
+    fn new() -> impl Future<Output = Result<Self, EmailError>>;
 
     /// Fetches all unread emails
     ///
-    /// returns: impl Future<Output= Vec<Email>> + Send
-    fn get_unread(&self) -> impl Future<Output = Vec<Email>> + Send;
+    /// returns: impl Future<Output= Result<Vec<Email>, EmailError>> + Send
+    fn get_unread(&self) -> impl Future<Output = Result<Vec<Email>, EmailError>> + Send;
 
     /// Update the status of specific email
     ///
@@ -20,5 +26,5 @@ pub trait EmailI {
         &self,
         email: &Email,
         status: EmailStatus,
-    ) -> impl Future<Output = ()> + Send;
+    ) -> impl Future<Output = Result<(), EmailError>> + Send;
 }

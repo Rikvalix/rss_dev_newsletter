@@ -6,7 +6,7 @@ use crate::storage;
 use crate::storage::create_file;
 use crate::utils::file_format_utils::format_file_path;
 use chrono::Local;
-use log::info;
+use log::{error, info};
 use std::path::PathBuf;
 
 /// Generate resume for each emails and last one global resume which be send.
@@ -24,12 +24,11 @@ pub async fn ai_processor(
     ai_client: &impl AiI,
     notification_client: &impl NotificationI,
     files: &Vec<PathBuf>,
-) {
+) -> Result<(), AiError> {
     info!("Starting AI processor");
 
     if files.len() == 0 {
         info!("No files to process");
-        return;
     }
 
     info!("{} files ", files.len());
@@ -38,36 +37,25 @@ pub async fn ai_processor(
 
     for file in files.into_iter() {
         info!("Processing file {}", file.display());
-        let response: Result<String, AiError> = ai_client
+        let response: String = ai_client
             .generate_resume(
                 file,
                 &ai_config.article_resume_system_prompt_path,
                 &ai_config.user_prompt_path,
             )
-            .await;
+            .await
+            .map_err(|err| {
+                error!("Error while processing file {}: {}", file.display(), err);
+                err
+            })?;
 
-        match response {
-            Ok(resp) => {
-                responses.push(resp);
-            }
-            Err(err) => {
-                let mut message_truncate = err.message.clone();
-                message_truncate.truncate(500);
-                message_truncate.push_str("...");
-                notification_client
-                    .send_message(message_truncate.as_str())
-                    .await
-                    .expect("Could not send message to Discord");
-                panic!("AI processor error: {}", err)
-            }
-        }
+        responses.push(response);
     }
 
     info!("{} responses are processed", responses.len());
 
     let resume_path = "ai_resume";
-    storage::check_or_create_folder(&resume_path)
-        .expect("Unable to check or create folder ai_resume");
+    storage::check_or_create_folder(&resume_path)?;
 
     let mut content_response: String = String::new();
 
@@ -76,8 +64,10 @@ pub async fn ai_processor(
         content_response += &resp;
     }
 
-    let global_resume_path: String = format_file_path(resume_path, "resume", &Local::now().date_naive());
-    create_file(global_resume_path.as_str(), &content_response);
+    let global_resume_path: PathBuf = create_file(
+        format_file_path(resume_path, "resume", &Local::now().date_naive()).as_str(),
+        &content_response,
+    )?;
 
     info!("Processing general resume");
     let global_resume = ai_client
@@ -86,24 +76,15 @@ pub async fn ai_processor(
             &ai_config.global_resume_system_prompt_path,
             &ai_config.user_prompt_path,
         )
-        .await;
+        .await
+        .map_err(|err| {
+            error!("Error while generating resume: {}", err);
+            err
+        })?;
 
-    match global_resume {
-        Ok(global_resume) => {
-            notification_client
-                .send_message(global_resume.as_str())
-                .await
-                .expect("Could not send message to Discord");
-        }
-        Err(err) => {
-            let mut message_truncate = err.message.clone();
-            message_truncate.truncate(500);
-            message_truncate.push_str("...");
-            notification_client
-                .send_message(message_truncate.as_str())
-                .await
-                .expect("Could not send message to Discord");
-            panic!("AI processor error: {}", err)
-        }
-    }
+    notification_client
+        .send_message(global_resume.as_str())
+        .await?;
+
+    Ok(())
 }

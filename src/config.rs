@@ -57,7 +57,10 @@ impl GlobalProperties {
             dev_path.push("config");
             dev_path 
         } else {
-            let mut exec_path = env::current_exe().unwrap();
+            let mut exec_path = env::current_exe()
+                .map_err(|e| ConfigError::PathParse {
+                    cause: e.to_string().into(),
+                })?;
             exec_path.pop();
             exec_path.push("config");
             exec_path 
@@ -65,8 +68,8 @@ impl GlobalProperties {
 
         let run_mode = env::var("RUN_MODE").unwrap_or_else(|_| "dev".into());
         let config_builder = Config::builder()
-            .add_source(config::File::with_name(&format!("{}/default",path.to_str().unwrap())))
-            .add_source(config::File::with_name(&format!("{}/config/{}", path.to_str().unwrap(),run_mode)).required(false))
+            .add_source(config::File::with_name(&format!("{}/default",path.display())))
+            .add_source(config::File::with_name(&format!("{}/config/{}", path.display(),run_mode)).required(false))
             .add_source(config::Environment::with_prefix("APP"));
         config_builder.build()?.try_deserialize()
     }

@@ -4,7 +4,7 @@ use crate::ai::prompt_loader::{load_ai_instruction, load_ai_message};
 use crate::config::AiProperties;
 use gemini_rust::client::Error;
 use gemini_rust::{FileHandle, Gemini, GenerationResponse};
-use log::info;
+use log::{error, info};
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
@@ -18,14 +18,14 @@ impl AiI for GeminiAdapter {
        - Add function to clear files
        - Add function to count input token
     */
-    fn new(ai_settings: &AiProperties) -> Self {
+    fn new(ai_settings: &AiProperties) -> Result<Self, AiError> {
         info!(
             "Initializing Gemini client with model: {}",
             ai_settings.model
         );
-        let client = Gemini::with_model(&ai_settings.api_key, ai_settings.model.clone())
-            .unwrap_or_else(|e| panic!("Unable to create Gemini client: {}", e));
-        GeminiAdapter { client }
+        let client = Gemini::with_model(&ai_settings.api_key, ai_settings.model.clone())?;
+
+        Ok(GeminiAdapter { client })
     }
 
     async fn generate_resume(
@@ -34,14 +34,13 @@ impl AiI for GeminiAdapter {
         system_prompt: &str,
         user_prompt: &str,
     ) -> Result<String, AiError> {
-        let file_handle = self.upload_file(path_file).await;
+        let file_handle: FileHandle = self.upload_file(path_file).await.map_err(|err| err)?;
 
         let response: Result<GenerationResponse, Error> = self
             .client
             .generate_content()
-            .with_system_prompt(load_ai_instruction(&system_prompt))
-            .with_user_message_and_file(load_ai_message(&user_prompt), &file_handle)
-            .unwrap_or_else(|err| panic!("Error while generating file: {}", err))
+            .with_system_prompt(load_ai_instruction(&system_prompt)?)
+            .with_user_message_and_file(load_ai_message(&user_prompt)?, &file_handle)?
             .execute()
             .await;
 
@@ -53,32 +52,35 @@ impl AiI for GeminiAdapter {
 }
 
 impl GeminiAdapter {
-    pub async fn upload_file(&self, file_path: &PathBuf) -> FileHandle {
+    pub async fn upload_file(&self, file_path: &PathBuf) -> Result<FileHandle, AiError> {
         // Extract bytes from the file
-        let mut mut_file = File::open(file_path).expect("Could not open file");
+        let mut mut_file = File::open(file_path)?;
         let mut bytes = Vec::new();
-        mut_file
-            .read_to_end(&mut bytes)
-            .expect("Fail to read the file");
+        mut_file.read_to_end(&mut bytes)?;
 
-        let file_path_str = file_path.to_str().unwrap();
+        let file_path_str = file_path.to_string_lossy();
 
-        let file_handle = self
+        if file_path_str.is_empty() {
+            return Err(AiError {
+                message: format!("Invalid file path {}",file_path.display())
+            });
+        }
+
+        let file_handle: FileHandle = self
             .client
             .create_file(bytes)
             .display_name(file_path_str.replace("/", "_"))
-            .with_mime_type(
-                "text/markdown"
-                    .parse()
-                    .unwrap_or_else(|e| panic!("Unable to create file {}: {}", &file_path_str, e)),
-            )
+            .with_mime_type("text/markdown".parse()?)
             .upload()
             .await
-            .unwrap_or_else(|e| panic!("Unable to upload file {}: {}", &file_path_str, e));
+            .map_err(|err| {
+                error!("File upload error {}", err.to_string());
+                err
+            })?;
 
         info!("File {}: uploaded", &file_path_str);
 
-        file_handle
+        Ok(file_handle)
     }
 
     pub fn handle_error(&self, err: &Error) -> AiError {

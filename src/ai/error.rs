@@ -1,3 +1,4 @@
+use gemini_rust::{ClientError, FilesError};
 use std::fmt::Display;
 
 type Result<T> = std::result::Result<T, AiError>;
@@ -9,5 +10,44 @@ pub struct AiError {
 impl Display for AiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "AiError: {}", self.message)
+    }
+}
+
+impl From<std::io::Error> for AiError {
+    fn from(err: std::io::Error) -> Self {
+        AiError {
+            message: format!("{}", err),
+        }
+    }
+}
+
+impl From<ClientError> for AiError {
+    fn from(err: ClientError) -> Self {
+        AiError {
+            message: format!("{}", err),
+        }
+    }
+}
+impl From<FilesError> for AiError {
+    fn from(err: FilesError) -> Self {
+        AiError {
+            message: format!("{}", err),
+        }
+    }
+}
+
+impl From<mime::FromStrError> for AiError {
+    fn from(err: mime::FromStrError) -> Self {
+        AiError {
+            message: format!("{}", err),
+        }
+    }
+}
+
+impl From<reqwest::Error> for AiError {
+    fn from(err: reqwest::Error) -> Self {
+        AiError {
+            message: format!("{}", err),
+        }
     }
 }

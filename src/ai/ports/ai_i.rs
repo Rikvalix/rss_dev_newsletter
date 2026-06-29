@@ -3,8 +3,7 @@ use crate::config::AiProperties;
 use std::path::PathBuf;
 
 /// Ai client interface to create resume from the differents emails
-pub trait AiI {
-
+pub trait AiI: Sized {
     /// Create new client instance
     ///
     /// # Arguments
@@ -12,7 +11,7 @@ pub trait AiI {
     /// * `ai_settings`: Configuration
     ///
     /// returns: Self
-    fn new(ai_settings: &AiProperties) -> Self;
+    fn new(ai_settings: &AiProperties) -> Result<Self, AiError>;
 
     /// Generate resume for specific file
     ///
@@ -23,7 +22,10 @@ pub trait AiI {
     /// * `user_prompt`: User prompt
     ///
     /// returns: impl Future<Output=Result<String, AiError>>
-    fn generate_resume(&self, path_file: &PathBuf, system_prompt: &str, user_prompt: &str) -> impl Future<Output = Result<String,AiError>>;
-
-
+    fn generate_resume(
+        &self,
+        path_file: &PathBuf,
+        system_prompt: &str,
+        user_prompt: &str,
+    ) -> impl Future<Output = Result<String, AiError>>;
 }

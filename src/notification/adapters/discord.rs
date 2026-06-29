@@ -6,8 +6,7 @@ pub struct DiscordAdapter {
     base_url: String,
 }
 
-impl NotificationI for  DiscordAdapter {
-
+impl NotificationI for DiscordAdapter {
     // Send message on the discord webhook, split it if the len is more than 2000
     async fn send_message(&self, message: &str) -> Result<(), reqwest::Error> {
         if message.chars().count() <= 2000 {
@@ -32,8 +31,6 @@ impl NotificationI for  DiscordAdapter {
         }
         Ok(())
     }
-
-
 }
 
 impl DiscordAdapter {
