@@ -21,14 +21,14 @@ impl AiI for GeminiAdapter {
     fn new(ai_settings: &AiProperties) -> Result<Self, AiError> {
         info!(
             "Initializing Gemini client with model: {}",
-            ai_settings.model
+            ai_settings.gemini.model
         );
-        let client = Gemini::with_model(&ai_settings.api_key, ai_settings.model.clone())?;
+        let client = Gemini::with_model(&ai_settings.gemini.api_key, ai_settings.gemini.model.clone())?;
 
         Ok(GeminiAdapter { client })
     }
 
-    async fn generate_resume(
+    async fn generate_summary(
         &self,
         path_file: &PathBuf,
         system_prompt: &str,

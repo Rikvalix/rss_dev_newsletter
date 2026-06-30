@@ -9,13 +9,13 @@ use chrono::Local;
 use log::{error, info};
 use std::path::PathBuf;
 
-/// Generate resume for each emails and last one global resume which be send.
+/// Generate summary for each emails and last one global summary which be send.
 ///
 /// # Arguments
 ///
 /// * `ai_config`: Ai configuration
-/// * `ai_client`: Ai client, use to generate resume
-/// * `notification_client`: Notification client, share status and resume
+/// * `ai_client`: Ai client, use to generate summary
+/// * `notification_client`: Notification client, share status and summary
 /// * `files`: List of paths to analyse
 ///
 /// returns: ()
@@ -38,9 +38,9 @@ pub async fn ai_processor(
     for file in files.into_iter() {
         info!("Processing file {}", file.display());
         let response: String = ai_client
-            .generate_resume(
+            .generate_summary(
                 file,
-                &ai_config.article_resume_system_prompt_path,
+                &ai_config.article_summary_system_prompt_path,
                 &ai_config.user_prompt_path,
             )
             .await
@@ -54,8 +54,8 @@ pub async fn ai_processor(
 
     info!("{} responses are processed", responses.len());
 
-    let resume_path = "ai_resume";
-    storage::check_or_create_folder(&resume_path)?;
+    let summary_path = "ai_summary";
+    storage::check_or_create_folder(&summary_path)?;
 
     let mut content_response: String = String::new();
 
@@ -64,26 +64,26 @@ pub async fn ai_processor(
         content_response += &resp;
     }
 
-    let global_resume_path: PathBuf = create_file(
-        format_file_path(resume_path, "resume", &Local::now().date_naive()).as_str(),
+    let global_summary_path: PathBuf = create_file(
+        format_file_path(summary_path, "summary", &Local::now().date_naive()).as_str(),
         &content_response,
     )?;
 
-    info!("Processing general resume");
-    let global_resume = ai_client
-        .generate_resume(
-            &PathBuf::from(global_resume_path),
-            &ai_config.global_resume_system_prompt_path,
+    info!("Processing general summary");
+    let global_summary = ai_client
+        .generate_summary(
+            &PathBuf::from(global_summary_path),
+            &ai_config.global_summary_system_prompt_path,
             &ai_config.user_prompt_path,
         )
         .await
         .map_err(|err| {
-            error!("Error while generating resume: {}", err);
+            error!("Error while generating summary: {}", err);
             err
         })?;
 
     notification_client
-        .send_message(global_resume.as_str())
+        .send_message(global_summary.as_str())
         .await?;
 
     Ok(())

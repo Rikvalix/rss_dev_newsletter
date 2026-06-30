@@ -1,4 +1,4 @@
-/// Notification trait to share status, resume
+/// Notification trait to share status, summary
 pub trait NotificationI {
 
 

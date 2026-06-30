@@ -1,7 +1,7 @@
 # Tldr Newsletter
 
-Fetch, Store emails from the [TLDR newsletter](https://tldr.tech/newsletters), generate resume and send it on discord
-thanks to AI.
+Fetch, Store emails from the [TLDR newsletter](https://tldr.tech/newsletters), generate summary and send it on discord
+thanks to AI. This is my first Rust project, currently in development.
 
 <!-- TOC -->
 * [Tldr Newsletter](#tldr-newsletter)
@@ -12,11 +12,11 @@ thanks to AI.
       * [Using Gmail](#using-gmail)
     * [AI](#ai)
       * [Using Gemini](#using-gemini)
+      * [Using Mistral Vibe](#using-mistral-vibe)
+    * [Notification](#notification)
+      * [Using Discord](#using-discord)
   * [Configuration](#configuration)
 <!-- TOC -->
-
-My first Rust project, currently in development. Right now, only the fetch and storage features work, and all values are
-hardcoded (except for credentials).
 
 # Getting Started
 
@@ -29,6 +29,12 @@ hardcoded (except for credentials).
 Rename the configuration file from `default-template.toml` to `default.toml`
 
 ### Email
+
+**Global configuration**:
+
+| Field                | Description                                       | Default |
+|----------------------|---------------------------------------------------|---------|
+| `mark_email_as_read` | If `false`, every run will pull your entire inbox | `false` |
 
 #### Using Gmail
 
@@ -47,17 +53,40 @@ To use Gmail, you need to follow these steps:
 
 ### AI
 
+The AI summary is an optional flow. It allows you to create summaries from different emails, store them, and send them
+to your favorite application like Discord.
+
+**Global configuration**:
+
+All prompts are located in the `config/ai` directory.
+
+| Field                                | Description                                                    | Default                               |
+|--------------------------------------|----------------------------------------------------------------|---------------------------------------|
+| `enable`                             | if `false` the ai flow is disable.                             | `true`                                |
+| `article_summary_system_prompt_path` | System prompt to create a summary for a single email.          | `ai_article_summary_system_prompt.md` |
+| `global_summary_system_prompt_path`  | System prompt for the global summary from all individual ones. | `ai_global_summary_system_prompt.md`  |
+| `user_prompt_path`                   | User message send with the file.                               | `ai_user_message.md`                  |
+
 #### Using Gemini
+
+The crate use is `gemini-rust`, you must configure API key on [google ai-studio](https://aistudio.google.com/). To
+configure it just fill the `[ai.gemini]` section. For the `model` field the complete list of Gemini models is
+available [here](https://ai.google.dev/gemini-api/docs/models).
+
+#### Using Mistral Vibe
+
+### Notification
+
+#### Using Discord
+
+First you need [create webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) on the
+discord channel where you want to send the daily summary. After that fill the `[notification.discord]` section and paste
+the webhook url in the field `webhook_url`.
 
 ## Configuration
 
 | Field                | Description                                                                        | Default                   |
 |----------------------|------------------------------------------------------------------------------------|---------------------------|
 | `mode`               | Current environment. Create a `<mode>.toml` file to override default configuration | `dev`                     |
-| **tldr_settings**    | ---------                                                                          | ------                    |
-| `mark_email_as_read` | If `false`, every run will pull your entire inbox                                  | `false`                   |
-| **git_settings**     | --------                                                                           | ---                       |
-| `enable`             | If `true`, the content of your `repository_path` will be pushed to the `branch`    | `false`                   |
-| `branch`             | Default branch                                                                     | `main`                    |
 | **storage_settings** | ----                                                                               | ---                       |
 | `repository_path`    | Path of the repository where the files will be stored                              | `tldr_newsletter_storage` |

@@ -27,16 +27,23 @@ pub struct StorageProperties {
     pub repository_path: String,
 }
 
+// Ai
 #[derive(Debug, Deserialize)]
 pub struct AiProperties {
     pub enable: bool,
-    pub url: String,
-    pub api_key: String,
-    pub model: String,
-    pub article_resume_system_prompt_path: String,
-    pub global_resume_system_prompt_path: String,
+    pub article_summary_system_prompt_path: String,
+    pub global_summary_system_prompt_path: String,
     pub user_prompt_path: String,
+    pub gemini : GeminiProperties,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct GeminiProperties {
+    pub api_key: String,
+    pub model: String
+}
+
+// Notification
 
 #[derive(Debug, Deserialize)]
 pub struct NotificationProperties {

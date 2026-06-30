@@ -1,7 +1,7 @@
 mode = "dev"
 
 [tldr]
-mark_email_as_read = false
+mark_email_as_read = true
 
 [git]
 enable = false
@@ -12,13 +12,13 @@ repository_path = "tldr_newsletter_storage"
 
 [ai]
 enable = true
-api_key= ""
-url = ""
-model = "models/gemini-2.5-pro"
-article_resume_system_prompt_path = "ai_article_resume_system_prompt.txt"
-global_resume_system_prompt_path = ""
-user_prompt_path = "ai_user_message.txt"
+article_summary_system_prompt_path = "ai_article_summary_system_prompt.md"
+global_summary_system_prompt_path = "ai_global_summary_system_prompt.md"
+user_prompt_path = "ai_user_message.md"
 
+[ai.gemini]
+api_key= ""
+model = "models/gemini-2.5-pro"
 
 [notification]
 
