@@ -35,12 +35,22 @@ pub struct AiProperties {
     pub global_summary_system_prompt_path: String,
     pub user_prompt_path: String,
     pub gemini : GeminiProperties,
+    pub mistral: MistralProperties,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct GeminiProperties {
     pub api_key: String,
     pub model: String
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MistralProperties {
+    pub api_key: String,
+    pub endpoint: String,
+    pub max_retries: u32,
+    pub timeout: u32,
+    pub model: String,
 }
 
 // Notification

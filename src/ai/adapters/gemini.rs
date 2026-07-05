@@ -14,10 +14,6 @@ pub struct GeminiAdapter {
 }
 
 impl AiI for GeminiAdapter {
-    /*
-       - Add function to clear files
-       - Add function to count input token
-    */
     fn new(ai_settings: &AiProperties) -> Result<Self, AiError> {
         info!(
             "Initializing Gemini client with model: {}",
@@ -97,9 +93,4 @@ impl GeminiAdapter {
             },
         }
     }
-
-    pub async fn list_all_files(&self) {}
-    pub async fn clear_files() {}
-
-    pub async fn count_token() {}
 }

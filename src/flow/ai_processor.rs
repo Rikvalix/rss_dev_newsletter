@@ -35,6 +35,9 @@ pub async fn ai_processor(
 
     let mut responses: Vec<String> = Vec::new();
 
+    let temporary_summary_path = "ai_summary/temporary";
+    storage::check_or_create_folder(&temporary_summary_path)?;
+
     for file in files.into_iter() {
         info!("Processing file {}", file.display());
         let response: String = ai_client
@@ -48,14 +51,17 @@ pub async fn ai_processor(
                 error!("Error while processing file {}: {}", file.display(), err);
                 err
             })?;
-
         responses.push(response);
     }
 
     info!("{} responses are processed", responses.len());
 
-    let summary_path = "ai_summary";
-    storage::check_or_create_folder(&summary_path)?;
+    create_file(
+        format_file_path(temporary_summary_path, "temp_summary", &Local::now().date_naive()).as_str(),
+        &responses.join("\n"),
+    )?;
+    let global_summary_path = "ai_summary/global";
+    storage::check_or_create_folder(&global_summary_path)?;
 
     let mut content_response: String = String::new();
 
@@ -65,7 +71,7 @@ pub async fn ai_processor(
     }
 
     let global_summary_path: PathBuf = create_file(
-        format_file_path(summary_path, "summary", &Local::now().date_naive()).as_str(),
+        format_file_path(global_summary_path, "summary", &Local::now().date_naive()).as_str(),
         &content_response,
     )?;
 

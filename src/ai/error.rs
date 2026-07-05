@@ -1,4 +1,5 @@
 use gemini_rust::{ClientError, FilesError};
+use mistralai_client::v1::error::{ApiError, ClientError as MistralError};
 use std::fmt::Display;
 
 type Result<T> = std::result::Result<T, AiError>;
@@ -21,6 +22,15 @@ impl From<std::io::Error> for AiError {
     }
 }
 
+impl From<serde_json::error::Error> for AiError {
+    fn from(err: serde_json::error::Error) -> Self {
+        AiError {
+            message: format!("{}",err)
+        }
+    }
+}
+
+// Gemini
 impl From<ClientError> for AiError {
     fn from(err: ClientError) -> Self {
         AiError {
@@ -30,6 +40,24 @@ impl From<ClientError> for AiError {
 }
 impl From<FilesError> for AiError {
     fn from(err: FilesError) -> Self {
+        AiError {
+            message: format!("{}", err),
+        }
+    }
+}
+
+// Mistral
+
+impl From<MistralError> for AiError {
+    fn from(err: MistralError) -> Self {
+        AiError {
+            message: format!("{}", err),
+        }
+    }
+}
+
+impl From<ApiError> for AiError {
+    fn from(err: ApiError) -> Self {
         AiError {
             message: format!("{}", err),
         }
