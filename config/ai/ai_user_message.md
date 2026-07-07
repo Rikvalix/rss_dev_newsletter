@@ -1,1 +1,1 @@
-Génère le résumé du fichier
+Génère le résumé en français du contenu suivant: 

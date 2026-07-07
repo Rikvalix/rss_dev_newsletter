@@ -56,29 +56,12 @@ pub async fn ai_processor(
 
     info!("{} responses are processed", responses.len());
 
-    create_file(
-        format_file_path(temporary_summary_path, "temp_summary", &Local::now().date_naive()).as_str(),
-        &responses.join("\n"),
-    )?;
-    let global_summary_path = "ai_summary/global";
-    storage::check_or_create_folder(&global_summary_path)?;
 
-    let mut content_response: String = String::new();
-
-    for resp in responses.into_iter() {
-        content_response += "\n--------\n";
-        content_response += &resp;
-    }
-
-    let global_summary_path: PathBuf = create_file(
-        format_file_path(global_summary_path, "summary", &Local::now().date_naive()).as_str(),
-        &content_response,
-    )?;
 
     info!("Processing general summary");
     let global_summary = ai_client
         .generate_summary(
-            &PathBuf::from(global_summary_path),
+            &PathBuf::from(format_file_path(temporary_summary_path, "temp_summary", &Local::now().date_naive()).as_str()),
             &ai_config.global_summary_system_prompt_path,
             &ai_config.user_prompt_path,
         )
@@ -87,6 +70,14 @@ pub async fn ai_processor(
             error!("Error while generating summary: {}", err);
             err
         })?;
+
+    let global_summary_path = "ai_summary/global";
+    storage::check_or_create_folder(&global_summary_path)?;
+
+    create_file(
+        format_file_path(global_summary_path, "summary", &Local::now().date_naive()).as_str(),
+        &global_summary,
+    )?;
 
     notification_client
         .send_message(global_summary.as_str())

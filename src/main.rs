@@ -1,5 +1,6 @@
 use log::{error, info};
 use std::path::PathBuf;
+use tldr_newsletter::ai::adapters::gemini::GeminiAdapter;
 use tldr_newsletter::ai::adapters::mistral::MistralAdapter;
 use tldr_newsletter::ai::ports::ai_i::AiI;
 use tldr_newsletter::config::GlobalProperties;
@@ -36,7 +37,7 @@ async fn main() {
     };
     info!("Email client is setup");
 
-    let ai_client = match MistralAdapter::new(&settings.ai) {
+    let ai_client = match GeminiAdapter::new(&settings.ai) {
         Ok(a) => a,
         Err(err) => {
             error!("Fail to init the AI adapter: {}", err);
