@@ -31,14 +31,13 @@ pub async fn tldr_process(
 
     for mail in unread_mails.iter() {
         let path = format_repository_path(&settings.storage.repository_path, &mail.sender);
-        check_or_create_folder(&*path)?;
+        check_or_create_folder(&path)?;
         let file_path =
             &format_file_path(&path, "article", &mail.receive_date.naive_local().date());
-        let file: PathBuf = create_file(&file_path, &mail.content)?;
+        let file: PathBuf = create_file(file_path, &mail.content)?;
         file_array.push(file);
         if settings.tldr.mark_email_as_read {
-            let _ = client.update_mail_status(&mail, EmailStatus::UNREAD)
-                .await?;
+            client.update_mail_status(mail, EmailStatus::UNREAD).await?;
         }
     }
 

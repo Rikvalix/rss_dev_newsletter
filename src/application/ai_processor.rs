@@ -23,11 +23,11 @@ pub async fn ai_processor(
     ai_config: &AiProperties,
     ai_client: &impl AiI,
     notification_client: &impl NotificationI,
-    files: &Vec<PathBuf>,
+    files: &[PathBuf],
 ) -> Result<(), AiError> {
     info!("Starting AI processor");
 
-    if files.len() == 0 {
+    if files.is_empty() {
         info!("No files to process");
     }
 
@@ -36,9 +36,9 @@ pub async fn ai_processor(
     let mut responses: Vec<String> = Vec::new();
 
     let temporary_summary_path = "ai_summary/temporary";
-    storage::check_or_create_folder(&temporary_summary_path)?;
+    storage::check_or_create_folder(temporary_summary_path)?;
 
-    for file in files.into_iter() {
+    for file in files.iter() {
         info!("Processing file {}", file.display());
         let response: String = ai_client.generate_summary(
                 file,
@@ -71,7 +71,7 @@ pub async fn ai_processor(
         })?;
 
     let global_summary_path = "ai_summary/global";
-    storage::check_or_create_folder(&global_summary_path)?;
+    storage::check_or_create_folder(global_summary_path)?;
 
     create_file(
         format_file_path(global_summary_path, "summary", &Local::now().date_naive()).as_str(),

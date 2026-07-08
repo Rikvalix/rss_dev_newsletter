@@ -3,12 +3,12 @@ use std::{fs, io};
 
 // Load ai system prompt
 pub fn load_ai_instruction(file_path: &str) -> io::Result<String> {
-    fs::read_to_string(get_ai_directory(&file_path)?)
+    fs::read_to_string(get_ai_directory(file_path)?)
 }
 
 // Load ai user message
 pub fn load_ai_message(file_path: &str) -> io::Result<String> {
-    fs::read_to_string(get_ai_directory(&file_path)?)
+    fs::read_to_string(get_ai_directory(file_path)?)
 }
 
 fn get_ai_directory(file_path: &str) -> io::Result<String> {

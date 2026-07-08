@@ -1,6 +1,6 @@
 use crate::config::AiProperties;
 use crate::infrastructure::ai::error::AiError;
-use std::path::PathBuf;
+use std::path::Path;
 
 /// Ai client interface to create summary from the differents emails
 pub trait AiI: Sized {
@@ -24,7 +24,7 @@ pub trait AiI: Sized {
     /// returns: impl Future<Output=Result<String, AiError>>
     fn generate_summary(
         &self,
-        path_file: &PathBuf,
+        path_file: &Path,
         system_prompt: &str,
         user_prompt: &str,
     ) -> impl Future<Output = Result<String, AiError>>;

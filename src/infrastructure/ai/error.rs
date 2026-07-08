@@ -2,7 +2,6 @@ use gemini_rust::{ClientError, FilesError};
 use mistralai_client::v1::error::{ApiError, ClientError as MistralError};
 use std::fmt::Display;
 
-type Result<T> = std::result::Result<T, AiError>;
 #[derive(Debug, Clone)]
 pub struct AiError {
     pub message: String,

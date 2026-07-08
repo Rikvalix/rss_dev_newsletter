@@ -2,7 +2,6 @@ use crate::infrastructure::error::EmailError;
 use std::fmt::Display;
 use tokio::io;
 
-type Result<T> = std::result::Result<T, FlowError>;
 
 #[derive(Debug, Clone)]
 pub struct FlowError {

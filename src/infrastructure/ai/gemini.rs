@@ -7,7 +7,7 @@ use gemini_rust::{FileHandle, Gemini, GenerationResponse};
 use log::{error, info};
 use std::fs::File;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::Path;
 
 pub struct GeminiAdapter {
     client: Gemini,
@@ -19,24 +19,27 @@ impl AiI for GeminiAdapter {
             "Initializing Gemini client with model: {}",
             ai_settings.gemini.model
         );
-        let client = Gemini::with_model(&ai_settings.gemini.api_key, ai_settings.gemini.model.clone())?;
+        let client = Gemini::with_model(
+            &ai_settings.gemini.api_key,
+            ai_settings.gemini.model.clone(),
+        )?;
 
         Ok(GeminiAdapter { client })
     }
 
     async fn generate_summary(
         &self,
-        path_file: &PathBuf,
+        path_file: &Path,
         system_prompt: &str,
         user_prompt: &str,
     ) -> Result<String, AiError> {
-        let file_handle: FileHandle = self.upload_file(path_file).await.map_err(|err| err)?;
+        let file_handle: FileHandle = self.upload_file(path_file).await?;
 
         let response: Result<GenerationResponse, Error> = self
             .client
             .generate_content()
-            .with_system_prompt(load_ai_instruction(&system_prompt)?)
-            .with_user_message_and_file(load_ai_message(&user_prompt)?, &file_handle)?
+            .with_system_prompt(load_ai_instruction(system_prompt)?)
+            .with_user_message_and_file(load_ai_message(user_prompt)?, &file_handle)?
             .execute()
             .await;
 
@@ -48,7 +51,7 @@ impl AiI for GeminiAdapter {
 }
 
 impl GeminiAdapter {
-    pub async fn upload_file(&self, file_path: &PathBuf) -> Result<FileHandle, AiError> {
+    pub async fn upload_file(&self, file_path: &Path) -> Result<FileHandle, AiError> {
         // Extract bytes from the file
         let mut mut_file = File::open(file_path)?;
         let mut bytes = Vec::new();
@@ -58,7 +61,7 @@ impl GeminiAdapter {
 
         if file_path_str.is_empty() {
             return Err(AiError {
-                message: format!("Invalid file path {}",file_path.display())
+                message: format!("Invalid file path {}", file_path.display()),
             });
         }
 
@@ -69,9 +72,8 @@ impl GeminiAdapter {
             .with_mime_type("text/markdown".parse()?)
             .upload()
             .await
-            .map_err(|err| {
-                error!("File upload error {}", err.to_string());
-                err
+            .inspect_err(|err| {
+                error!("File upload error {}", err);
             })?;
 
         info!("File {}: uploaded", &file_path_str);

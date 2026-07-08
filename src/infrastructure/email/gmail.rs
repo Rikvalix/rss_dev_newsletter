@@ -84,7 +84,7 @@ impl EmailI for GmailAdapter {
             .await?;
 
         let mut emails = Vec::new();
-
+        let re = Regex::new(r"\s*<.*?>")?;
         if let Some(messages) = list.messages {
             for m in messages {
                 let id = m.id.ok_or(EmailError {
@@ -101,7 +101,6 @@ impl EmailI for GmailAdapter {
                     .await?;
 
                 // Extract sender
-                let re = Regex::new(r"\s*<.*?>")?;
                 let sender: Sender = Self::extract_from_header(&msg, "From".to_string())
                     .as_deref()
                     .map(|data| {
@@ -166,7 +165,7 @@ impl EmailI for GmailAdapter {
 
         self.client
             .users()
-            .messages_modify(req, "me", &*email.id)
+            .messages_modify(req, "me", &email.id)
             .add_scope(self.scope.as_str())
             .doit()
             .await?;

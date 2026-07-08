@@ -6,13 +6,12 @@ use mistralai_client::v1::client::Client;
 use mistralai_client::v1::constants::Model;
 use std::fs::File;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::Path;
 
 pub struct MistralAdapter {
     pub client: Client,
     pub model: Model,
 }
-
 
 impl AiI for MistralAdapter {
     fn new(ai_settings: &AiProperties) -> Result<Self, AiError> {
@@ -26,17 +25,15 @@ impl AiI for MistralAdapter {
         )?;
 
         // Check if the model exists
-        let model: Model = serde_json::from_str::<Model>(format!("\"{}\"", mistral_properties.model).as_str())?;
+        let model: Model =
+            serde_json::from_str::<Model>(format!("\"{}\"", mistral_properties.model).as_str())?;
 
-        Ok(MistralAdapter {
-            client,
-            model,
-        })
+        Ok(MistralAdapter { client, model })
     }
 
     async fn generate_summary(
         &self,
-        path_file: &PathBuf,
+        path_file: &Path,
         system_prompt: &str,
         user_prompt: &str,
     ) -> Result<String, AiError> {
@@ -44,10 +41,9 @@ impl AiI for MistralAdapter {
         let mut content: String = String::new();
         file.read_to_string(&mut content)?;
 
-
         let complete_user_prompt = format!("{} \n {}", user_prompt, content);
 
-        let assistant_message = ChatMessage::new_assistant_message(&system_prompt, None);
+        let assistant_message = ChatMessage::new_assistant_message(system_prompt, None);
         let user_message = ChatMessage::new_user_message(&complete_user_prompt);
 
         let options = ChatParams {
@@ -55,11 +51,14 @@ impl AiI for MistralAdapter {
             ..ChatParams::default()
         };
 
-        let response_chat: ChatResponse = self.client.chat_async(
-            self.model.clone(),
-            vec![assistant_message, user_message],
-            Some(options),
-        ).await?;
+        let response_chat: ChatResponse = self
+            .client
+            .chat_async(
+                self.model.clone(),
+                vec![assistant_message, user_message],
+                Some(options),
+            )
+            .await?;
 
         let mut response = String::new();
 

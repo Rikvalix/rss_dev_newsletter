@@ -2,7 +2,6 @@ use crate::application::error::FlowError;
 use std::fmt::Display;
 use std::io::Error;
 
-type Result<T> = std::result::Result<T, EmailError>;
 
 #[derive(Debug, Clone)]
 pub struct EmailError {
