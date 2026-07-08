@@ -1,4 +1,4 @@
-use crate::flow::error::FlowError;
+use crate::application::error::FlowError;
 use std::fmt::Display;
 use std::io::Error;
 

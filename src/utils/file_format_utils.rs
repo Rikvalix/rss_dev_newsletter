@@ -1,4 +1,4 @@
-use crate::model::Sender;
+use crate::domain::email::model::Sender;
 use chrono::NaiveDate;
 
 pub fn format_file_path(path: &str,file_prefix: &str, date: &NaiveDate) -> String {

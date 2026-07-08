@@ -1,9 +1,7 @@
 pub mod config;
-pub mod email;
-pub mod flow;
+pub mod application;
 pub mod storage;
 pub mod utils;
-pub mod ai;
-
-pub mod model;
-pub mod notification;
+pub mod domain;
+pub mod ports;
+pub mod infrastructure;

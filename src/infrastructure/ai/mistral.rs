@@ -1,6 +1,6 @@
-use crate::ai::error::AiError;
-use crate::ai::ports::ai_i::AiI;
 use crate::config::AiProperties;
+use crate::infrastructure::ai::error::AiError;
+use crate::ports::ai_i::AiI;
 use mistralai_client::v1::chat::{ChatMessage, ChatParams, ChatResponse};
 use mistralai_client::v1::client::Client;
 use mistralai_client::v1::constants::Model;

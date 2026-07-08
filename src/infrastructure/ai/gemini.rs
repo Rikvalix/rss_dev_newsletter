@@ -1,7 +1,7 @@
-use crate::ai::error::AiError;
-use crate::ai::ports::ai_i::AiI;
-use crate::ai::prompt_loader::{load_ai_instruction, load_ai_message};
 use crate::config::AiProperties;
+use crate::infrastructure::ai::error::AiError;
+use crate::infrastructure::ai::prompt_loader::{load_ai_instruction, load_ai_message};
+use crate::ports::ai_i::AiI;
 use gemini_rust::client::Error;
 use gemini_rust::{FileHandle, Gemini, GenerationResponse};
 use log::{error, info};

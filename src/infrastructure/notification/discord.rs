@@ -1,4 +1,4 @@
-use crate::notification::ports::notification_i::NotificationI;
+use crate::ports::notification_i::NotificationI;
 use serde_json::json;
 
 pub struct DiscordAdapter {

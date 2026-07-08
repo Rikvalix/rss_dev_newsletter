@@ -1,5 +1,5 @@
-use crate::email::error::EmailError;
-use crate::model::{Email, EmailStatus};
+use crate::domain::email::model::{Email, EmailStatus};
+use crate::infrastructure::error::EmailError;
 
 /// Email client interface for fetching and managing TLDR newsletter emails
 pub trait EmailI: Sized {

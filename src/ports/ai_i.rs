@@ -1,5 +1,5 @@
-use crate::ai::error::AiError;
 use crate::config::AiProperties;
+use crate::infrastructure::ai::error::AiError;
 use std::path::PathBuf;
 
 /// Ai client interface to create summary from the differents emails

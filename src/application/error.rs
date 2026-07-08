@@ -1,4 +1,4 @@
-use crate::email::error::EmailError;
+use crate::infrastructure::error::EmailError;
 use std::fmt::Display;
 use tokio::io;
 

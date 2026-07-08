@@ -1,7 +1,7 @@
+use crate::application::error::FlowError;
 use crate::config::GlobalProperties;
-use crate::email::ports::email::EmailI;
-use crate::flow::error::FlowError;
-use crate::model::{Email, EmailStatus};
+use crate::domain::email::model::{Email, EmailStatus};
+use crate::ports::email::EmailI;
 use crate::storage::{check_or_create_folder, create_file};
 use crate::utils::file_format_utils::{format_file_path, format_repository_path};
 use log::{error, info};

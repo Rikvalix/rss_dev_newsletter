@@ -1,14 +1,13 @@
 use log::{error, info};
 use std::path::PathBuf;
-use tldr_newsletter::ai::adapters::gemini::GeminiAdapter;
-use tldr_newsletter::ai::adapters::mistral::MistralAdapter;
-use tldr_newsletter::ai::ports::ai_i::AiI;
+use tldr_newsletter::application::ai_processor::ai_processor;
+use tldr_newsletter::application::tldr_processor::tldr_process;
 use tldr_newsletter::config::GlobalProperties;
-use tldr_newsletter::email::adapters::gmail::GmailAdapter;
-use tldr_newsletter::email::ports::email::EmailI;
-use tldr_newsletter::flow::ai_processor::ai_processor;
-use tldr_newsletter::flow::tldr_processor::tldr_process;
-use tldr_newsletter::notification::adapters::discord::DiscordAdapter;
+use tldr_newsletter::infrastructure::ai::gemini::GeminiAdapter;
+use tldr_newsletter::infrastructure::email::gmail::GmailAdapter;
+use tldr_newsletter::infrastructure::notification::discord::DiscordAdapter;
+use tldr_newsletter::ports::ai_i::AiI;
+use tldr_newsletter::ports::email::EmailI;
 
 #[tokio::main]
 async fn main() {

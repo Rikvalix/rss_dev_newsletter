@@ -1,6 +1,7 @@
-use crate::email::error::EmailError;
-use crate::email::ports::email::EmailI;
-use crate::model::{Email, EmailStatus, Sender};
+use crate::domain::email::model::{Email, EmailStatus, Sender};
+use crate::infrastructure::error::EmailError;
+use crate::ports::email::
+EmailI;
 use crate::utils::path_utils::get_current_exec_path;
 use chrono::DateTime;
 use google_gmail1::api::{Message, ModifyMessageRequest};

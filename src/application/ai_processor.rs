@@ -1,7 +1,7 @@
-use crate::ai::error::AiError;
-use crate::ai::ports::ai_i::AiI;
 use crate::config::AiProperties;
-use crate::notification::ports::notification_i::NotificationI;
+use crate::infrastructure::ai::error::AiError;
+use crate::ports::ai_i::AiI;
+use crate::ports::notification_i::NotificationI;
 use crate::storage;
 use crate::storage::create_file;
 use crate::utils::file_format_utils::format_file_path;
@@ -40,8 +40,7 @@ pub async fn ai_processor(
 
     for file in files.into_iter() {
         info!("Processing file {}", file.display());
-        let response: String = ai_client
-            .generate_summary(
+        let response: String = ai_client.generate_summary(
                 file,
                 &ai_config.article_summary_system_prompt_path,
                 &ai_config.user_prompt_path,
