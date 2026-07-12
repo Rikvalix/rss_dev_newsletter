@@ -1,6 +1,7 @@
 use log::{error, info};
 use std::path::PathBuf;
 use tldr_newsletter::application::ai_processor::ai_processor;
+use tldr_newsletter::application::rss_processor::rss_processor;
 use tldr_newsletter::application::tldr_processor::tldr_process;
 use tldr_newsletter::config::GlobalProperties;
 use tldr_newsletter::infrastructure::ai::gemini::GeminiAdapter;
@@ -47,26 +48,28 @@ async fn main() {
 
     let notification_client = DiscordAdapter::new(&settings.notification.discord.webhook_url);
     // TODO: Add configuration provider to load interface instead of adapter
+    //
+    // info!("Run TLDR processor");
+    // let files: Vec<PathBuf> = match tldr_process(&email_client, &settings).await {
+    //     Ok(a) => a,
+    //     Err(e) => {
+    //         error!("Error during the TLDR processor {}", e);
+    //         std::process::exit(1);
+    //     }
+    // };
+    //
+    // if settings.ai.enable {
+    //     info!("Run Ai processor");
+    //     match ai_processor(&settings.ai, &ai_client, &notification_client, &files).await {
+    //         Ok(a) => a,
+    //         Err(e) => {
+    //             error!("Error during the AI processor {}", e);
+    //             std::process::exit(1);
+    //         }
+    //     };
+    // } else {
+    //     info!("Ai processor disabled");
+    // }
 
-    info!("Run TLDR processor");
-    let files: Vec<PathBuf> = match tldr_process(&email_client, &settings).await {
-        Ok(a) => a,
-        Err(e) => {
-            error!("Error during the TLDR processor {}", e);
-            std::process::exit(1);
-        }
-    };
-
-    if settings.ai.enable {
-        info!("Run Ai processor");
-        match ai_processor(&settings.ai, &ai_client, &notification_client, &files).await {
-            Ok(a) => a,
-            Err(e) => {
-                error!("Error during the AI processor {}", e);
-                std::process::exit(1);
-            }
-        };
-    } else {
-        info!("Ai processor disabled");
-    }
+    rss_processor();
 }
