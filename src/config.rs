@@ -10,6 +10,8 @@ pub struct GlobalProperties {
     pub storage: StorageProperties,
     pub ai: AiProperties,
     pub notification: NotificationProperties,
+    pub rss: RssProperties,
+    pub database: DatabaseProperties
 }
 
 #[derive(Debug, Deserialize)]
@@ -25,6 +27,32 @@ pub struct GitProperties {
 #[derive(Debug, Deserialize)]
 pub struct StorageProperties {
     pub repository_path: String,
+}
+
+// Rss
+
+#[derive(Debug, Deserialize)]
+pub struct RssProperties {
+    pub enable: bool,
+    pub feeds: Vec<RssFeedProperties>
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RssFeedProperties {
+    pub title: String,
+    pub url: String,
+    pub feed_type: String,
+    pub is_active: bool
+}
+
+// Database
+#[derive(Debug, Deserialize)]
+pub struct DatabaseProperties {
+    pub host: String,
+    pub port: String,
+    pub user: String,
+    pub password: String,
+    pub database: String
 }
 
 // Ai

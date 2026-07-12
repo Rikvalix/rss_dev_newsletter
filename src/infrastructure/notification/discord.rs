@@ -34,11 +34,12 @@ impl NotificationI for DiscordAdapter {
 }
 
 impl DiscordAdapter {
-    pub fn new(webhook_url: &str) -> Self {
-        DiscordAdapter {
+    pub fn new(webhook_url: &str) -> Result<Self,()> {
+       let client =  DiscordAdapter {
             client: reqwest::Client::new(),
             base_url: webhook_url.to_string(),
-        }
+        };
+        Ok(client)
     }
 
     async fn send(&self, message: &str) -> Result<(), reqwest::Error> {
