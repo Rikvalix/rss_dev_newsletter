@@ -8,8 +8,8 @@ pub struct FeedRepository {
 }
 
 impl FeedRepository {
-    pub fn new(pool: PgPool) -> FeedRepository {
-        Self { pool }
+    pub fn new(pool: &PgPool) -> Self {
+        Self { pool: pool.clone() }
     }
 
     pub async fn save(&self, feed: &Feed) -> Result<FeedEntity, sqlx::Error> {
@@ -19,15 +19,15 @@ impl FeedRepository {
 
         let saved = sqlx::query_as::<_, FeedEntity>(
             r#"
-            insert into feeds (title, url, feed_type, is_active)
+            insert into FEEDS (title, url, feed_type, is_active)
             VALUES($1,$2,$3,$4)
-            RETURNING *
+            RETURNING id::bigint, title, url, feed_type, is_active, updated_at,created_at
             "#,
         )
         .bind(&feed.title)
         .bind(&feed.url)
         .bind(&feed.feed_type)
-        .bind(&feed.is_active)
+        .bind(feed.is_active)
         .fetch_one(&self.pool)
         .await?;
 
@@ -35,18 +35,11 @@ impl FeedRepository {
     }
 
     pub async fn find_by_title(&self, title: &str) -> Result<Option<FeedEntity>, sqlx::Error> {
-        let feed = sqlx::query_as::<_, FeedEntity>("select * from feeds where title = $1")
+        let feed = sqlx::query_as::<_, FeedEntity>("select id::bigint, title, url, feed_type, is_active, created_at, updated_at from feeds where title = $1")
             .bind(title)
-            .fetch_one(&self.pool)
+            .fetch_optional(&self.pool)
             .await?;
 
-        Ok(Some(feed))
-    }
-    pub async fn find_all(&self) -> Result<Vec<FeedEntity>, sqlx::Error> {
-        let feeds = sqlx::query_as::<_, FeedEntity>("SELECT * FROM feed")
-            .fetch_all(&self.pool)
-            .await?;
-
-        Ok(feeds)
+        Ok(feed)
     }
 }

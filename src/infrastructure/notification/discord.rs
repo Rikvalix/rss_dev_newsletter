@@ -34,7 +34,7 @@ impl NotificationI for DiscordAdapter {
 }
 
 impl DiscordAdapter {
-    pub fn new(webhook_url: &str) -> Result<Self,()> {
+    pub fn new(webhook_url: &str) -> Result<Self,Box<dyn std::error::Error>> {
        let client =  DiscordAdapter {
             client: reqwest::Client::new(),
             base_url: webhook_url.to_string(),

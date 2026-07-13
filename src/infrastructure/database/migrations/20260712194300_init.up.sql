@@ -10,7 +10,7 @@ CREATE TABLE feeds
     updated_at TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE articles
+CREATE TABLE feed_items
 (
     id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     feed_id        INT         NOT NULL REFERENCES feeds (id) ON DELETE CASCADE,
@@ -18,11 +18,11 @@ CREATE TABLE articles
     url            VARCHAR(2048),
     title          TEXT        NOT NULL,
     content        TEXT,
-    raw_extensions JSONB       NOT NULL DEFAULT '{}'::jsonb,
     published_at   TIMESTAMPTZ NOT NULL,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT uq_feed_guid UNIQUE (feed_id, guid)
 );
 
-CREATE INDEX idx_articles_published_at_desc ON articles (published_at DESC);
+CREATE INDEX idx_articles_published_at_desc ON feed_items (published_at DESC);

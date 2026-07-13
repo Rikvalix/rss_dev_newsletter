@@ -2,9 +2,8 @@ use crate::config::DatabaseProperties;
 use log::info;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
-use std::fmt::format;
 
-pub async fn init_sqlite_database(
+pub async fn init_postgres_database(
     properties: &DatabaseProperties,
 ) -> Result<PgPool, Box<dyn std::error::Error>> {
     let url = format!(
