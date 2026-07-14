@@ -1,3 +1,4 @@
+use crate::domain::rss::model::Type;
 use config::{Config, ConfigError};
 use serde::Deserialize;
 use std::{env, path::PathBuf};
@@ -41,7 +42,7 @@ pub struct RssProperties {
 pub struct RssFeedProperties {
     pub title: String,
     pub url: String,
-    pub feed_type: String,
+    pub feed_type: Type,
     pub is_active: bool
 }
 

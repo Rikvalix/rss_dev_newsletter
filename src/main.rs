@@ -83,7 +83,7 @@ async fn main() {
             .save(&Feed {
                 title: feed.title.to_string(),
                 url: feed.url.to_string(),
-                feed_type: feed.feed_type.to_string(),
+                feed_type: feed.feed_type,
                 is_active: feed.is_active,
             })
             .await

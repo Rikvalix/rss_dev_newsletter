@@ -26,7 +26,7 @@ impl FeedRepository {
         )
         .bind(&feed.title)
         .bind(&feed.url)
-        .bind(&feed.feed_type)
+        .bind(&feed.feed_type.to_string())
         .bind(feed.is_active)
         .fetch_one(&self.pool)
         .await?;
