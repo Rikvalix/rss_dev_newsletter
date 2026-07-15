@@ -1,15 +1,15 @@
 use log::{error, info};
-use tldr_newsletter::application::rss_processor::RssProcessor;
-use tldr_newsletter::config::GlobalProperties;
-use tldr_newsletter::domain::database::model::FeedEntity;
-use tldr_newsletter::domain::rss::model::Feed;
-use tldr_newsletter::infrastructure::ai::gemini::GeminiAdapter;
-use tldr_newsletter::infrastructure::database::init_database::init_postgres_database;
-use tldr_newsletter::infrastructure::database::repository::feed_item_repository::FeedItemRepository;
-use tldr_newsletter::infrastructure::database::repository::feed_repository::FeedRepository;
-use tldr_newsletter::infrastructure::notification::discord::DiscordAdapter;
-use tldr_newsletter::infrastructure::rss::rss_client::RssAdapter;
-use tldr_newsletter::ports::ai_i::AiI;
+use rss_dev_newsletter::application::rss_processor::RssProcessor;
+use rss_dev_newsletter::config::GlobalProperties;
+use rss_dev_newsletter::domain::database::model::FeedEntity;
+use rss_dev_newsletter::domain::rss::model::Feed;
+use rss_dev_newsletter::infrastructure::ai::gemini::GeminiAdapter;
+use rss_dev_newsletter::infrastructure::database::init_database::init_postgres_database;
+use rss_dev_newsletter::infrastructure::database::repository::feed_item_repository::FeedItemRepository;
+use rss_dev_newsletter::infrastructure::database::repository::feed_repository::FeedRepository;
+use rss_dev_newsletter::infrastructure::notification::discord::DiscordAdapter;
+use rss_dev_newsletter::infrastructure::rss::rss_client::RssAdapter;
+use rss_dev_newsletter::ports::ai_i::AiI;
 
 #[tokio::main]
 async fn main() {
