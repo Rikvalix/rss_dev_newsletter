@@ -1,13 +1,14 @@
-extern crate google_gmail1 as gmail1;
-
-use crate::email::ports::email::EmailI;
-use crate::model::{Email, EmailStatus, Sender};
+use crate::domain::email::model::{Email, EmailStatus, Sender};
+use crate::infrastructure::error::EmailError;
+use crate::ports::email::
+EmailI;
 use crate::utils::path_utils::get_current_exec_path;
 use chrono::DateTime;
-use gmail1::{hyper_rustls, hyper_util, yup_oauth2, Gmail};
 use google_gmail1::api::{Message, ModifyMessageRequest};
 use google_gmail1::hyper_rustls::HttpsConnector;
 use google_gmail1::hyper_util::client::legacy::connect::HttpConnector;
+use google_gmail1::{hyper_rustls, hyper_util, yup_oauth2, Gmail};
+use log::warn;
 use regex::Regex;
 use std::str::FromStr;
 
@@ -17,7 +18,56 @@ pub struct GmailAdapter {
 }
 
 impl EmailI for GmailAdapter {
-    async fn get_unread(&self) -> Vec<Email> {
+    async fn new() -> Result<Self, EmailError> {
+        let exec_path = get_current_exec_path()?;
+
+        let mut json_path = exec_path.clone();
+        json_path.push("client_secret.json");
+
+        let secret: yup_oauth2::ApplicationSecret =
+            yup_oauth2::read_application_secret(json_path).await?;
+
+        let connector = hyper_rustls::HttpsConnectorBuilder::new()
+            .with_native_roots()?
+            .https_only()
+            .enable_http2()
+            .build();
+
+        let executor = hyper_util::rt::TokioExecutor::new();
+
+        let mut token_path = exec_path;
+        token_path.push("token.json");
+        let auth = yup_oauth2::InstalledFlowAuthenticator::with_client(
+            secret,
+            yup_oauth2::InstalledFlowReturnMethod::HTTPRedirect,
+            yup_oauth2::client::CustomHyperClientBuilder::from(
+                hyper_util::client::legacy::Client::builder(executor).build(connector),
+            ),
+        )
+        .persist_tokens_to_disk(token_path)
+        .build()
+        .await?;
+
+        let scopes = "https://www.googleapis.com/auth/gmail.modify";
+        auth.token(&[scopes]).await?;
+
+        let client =
+            hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
+                .build(
+                    hyper_rustls::HttpsConnectorBuilder::new()
+                        .with_native_roots()?
+                        .https_or_http()
+                        .enable_http2()
+                        .build(),
+                );
+
+        Ok(GmailAdapter {
+            client: Gmail::new(client, auth),
+            scope: String::from(scopes),
+        })
+    }
+
+    async fn get_unread(&self) -> Result<Vec<Email>, EmailError> {
         const SENDER: &str = "dan@tldrnewsletter.com";
 
         let mut query = "is:unread from:".to_string();
@@ -31,14 +81,15 @@ impl EmailI for GmailAdapter {
             .q(query.as_str())
             .add_scope(self.scope.as_str())
             .doit()
-            .await
-            .expect("Error during unread mails listing");
+            .await?;
 
         let mut emails = Vec::new();
-
+        let re = Regex::new(r"\s*<.*?>")?;
         if let Some(messages) = list.messages {
             for m in messages {
-                let id = m.id.unwrap();
+                let id = m.id.ok_or(EmailError {
+                    message: "Message ID is missing".to_string(),
+                })?;
 
                 let (_, msg) = self
                     .client
@@ -47,18 +98,19 @@ impl EmailI for GmailAdapter {
                     .format("full") // Get the entire message
                     .add_scope(self.scope.as_str())
                     .doit()
-                    .await
-                    .unwrap();
+                    .await?;
 
                 // Extract sender
-                let re = Regex::new(r"\s*<.*?>").unwrap();
                 let sender: Sender = Self::extract_from_header(&msg, "From".to_string())
                     .as_deref()
                     .map(|data| {
                         let cleaned = re.replace_all(data, "");
                         Sender::from_str(&cleaned).unwrap_or(Sender::ToSort)
                     })
-                    .unwrap_or(Sender::ToSort);
+                    .unwrap_or_else(|| {
+                        warn!("Fail to parse sender");
+                        Sender::ToSort
+                    });
 
                 // Extract content
                 let content: String = msg
@@ -78,11 +130,16 @@ impl EmailI for GmailAdapter {
                             })
                         }
                     })
-                    .unwrap_or_else(|| "No content".to_string());
+                    .unwrap_or_else(|| {
+                        warn!("Email {} has no content", id);
+                        "No content".to_string()
+                    });
 
                 // Date
                 let receive_date = DateTime::from_timestamp_millis(msg.internal_date.unwrap_or(0))
-                    .expect("Could not parse receive date");
+                    .ok_or(EmailError {
+                        message: "Unable to parse date".to_string(),
+                    })?;
 
                 emails.push(Email {
                     id,
@@ -93,10 +150,14 @@ impl EmailI for GmailAdapter {
                 });
             }
         }
-        emails
+        Ok(emails)
     }
 
-    async fn update_mail_status(&self, email: &Email, status: EmailStatus) {
+    async fn update_mail_status(
+        &self,
+        email: &Email,
+        status: EmailStatus,
+    ) -> Result<(), EmailError> {
         let req = ModifyMessageRequest {
             add_label_ids: None,
             remove_label_ids: Some(vec![status.to_string()]),
@@ -104,82 +165,21 @@ impl EmailI for GmailAdapter {
 
         self.client
             .users()
-            .messages_modify(req, "me", &*email.id)
+            .messages_modify(req, "me", &email.id)
             .add_scope(self.scope.as_str())
             .doit()
-            .await
-            .expect("Update status failed for mail");
+            .await?;
+
+        Ok(())
     }
 }
 
 impl GmailAdapter {
-    pub async fn new() -> Self {
-        let exec_path = get_current_exec_path();
-        
-        let mut json_path = exec_path.clone();
-        json_path.push("client_secret.json");
-
-        let secret: yup_oauth2::ApplicationSecret =
-            yup_oauth2::read_application_secret(json_path)
-                .await
-                .expect("Fail to read application secret file: client_secret.json");
-
-        let connector = hyper_rustls::HttpsConnectorBuilder::new()
-            .with_native_roots()
-            .unwrap()
-            .https_only()
-            .enable_http2()
-            .build();
-
-        let executor = hyper_util::rt::TokioExecutor::new();
-
-        let mut token_path = exec_path;
-        token_path.push("token.json");
-        let auth = yup_oauth2::InstalledFlowAuthenticator::with_client(
-            secret,
-            yup_oauth2::InstalledFlowReturnMethod::HTTPRedirect,
-            yup_oauth2::client::CustomHyperClientBuilder::from(
-                hyper_util::client::legacy::Client::builder(executor).build(connector),
-            ),
-        )
-        .persist_tokens_to_disk(token_path)
-        .build()
-        .await
-        .unwrap();
-
-        let scopes = "https://www.googleapis.com/auth/gmail.modify";
-        auth.token(&[scopes])
-            .await
-            .expect("Fail to init the Google token");
-
-        let client =
-            hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
-                .build(
-                    hyper_rustls::HttpsConnectorBuilder::new()
-                        .with_native_roots()
-                        .unwrap()
-                        .https_or_http()
-                        .enable_http2()
-                        .build(),
-                );
-
-        GmailAdapter {
-            client: Gmail::new(client, auth),
-            scope: String::from(scopes),
-        }
-    }
-
     fn extract_from_header(message: &Message, key: String) -> Option<String> {
-        message
-            .payload
-            .clone()
-            .unwrap()
-            .headers
-            .as_ref()
-            .and_then(|h| {
-                h.iter()
-                    .find(|h| h.name == Some(key.clone()))
-                    .and_then(|h| h.value.clone())
-            })
+        message.payload.clone()?.headers.as_ref().and_then(|h| {
+            h.iter()
+                .find(|h| h.name == Some(key.clone()))
+                .and_then(|h| h.value.clone())
+        })
     }
 }

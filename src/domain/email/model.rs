@@ -3,7 +3,6 @@ use std::fmt;
 use std::fmt::Formatter;
 use strum_macros::EnumString;
 
-
 #[derive(Debug)]
 pub struct Email {
     pub id: String,

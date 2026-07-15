@@ -1,0 +1,1 @@
+Génère le résumé en français du contenu suivant: 

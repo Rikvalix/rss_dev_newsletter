@@ -1,0 +1,51 @@
+mode = "dev"
+
+[tldr]
+mark_email_as_read = true
+
+[git]
+enable = false
+branch = "main"
+
+[storage]
+repository_path = "tldr_newsletter_storage"
+
+[ai]
+enable = true
+article_summary_system_prompt_path = "ai_article_summary_system_prompt.md"
+global_summary_system_prompt_path = "ai_global_summary_system_prompt.md"
+user_prompt_path = "ai_user_message.md"
+
+[ai.gemini]
+api_key= ""
+model = "models/gemini-2.5-pro"
+
+[ai.mistral]
+api_key = ""
+endpoint = "https://api.mistral.ai/v1"
+max_retries = 5
+timeout = 120
+model = "mistral-small-latest"
+
+[notification]
+
+[notification.discord]
+enable = true
+webhook_url = ""
+
+[database]
+
+host = ""
+port = ""
+user = ""
+password = ""
+database = ""
+
+[rss]
+enable = true
+
+[[rss.feeds]]
+title = "TLDR DEVOPS"
+url = "https://bullrich.dev/tldr-rss/devops.rss"
+feed_type = "DEVOPS"
+is_active = true
