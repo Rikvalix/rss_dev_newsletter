@@ -1,4 +1,3 @@
-use crate::domain::rss::model::Type;
 use config::{Config, ConfigError};
 use serde::Deserialize;
 use std::{env, path::PathBuf};
@@ -6,23 +5,11 @@ use std::{env, path::PathBuf};
 #[derive(Debug, Deserialize)]
 pub struct GlobalProperties {
     pub mode: String,
-    pub tldr: TldrProperties,
-    pub git: GitProperties,
     pub storage: StorageProperties,
     pub ai: AiProperties,
     pub notification: NotificationProperties,
     pub rss: RssProperties,
     pub database: DatabaseProperties
-}
-
-#[derive(Debug, Deserialize)]
-pub struct TldrProperties {
-    pub mark_email_as_read: bool
-}
-#[derive(Debug, Deserialize)]
-pub struct GitProperties {
-    pub enable: bool,
-    pub branch: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -35,15 +22,6 @@ pub struct StorageProperties {
 #[derive(Debug, Deserialize)]
 pub struct RssProperties {
     pub enable: bool,
-    pub feeds: Vec<RssFeedProperties>
-}
-
-#[derive(Debug, Deserialize)]
-pub struct RssFeedProperties {
-    pub title: String,
-    pub url: String,
-    pub feed_type: Type,
-    pub is_active: bool
 }
 
 // Database

@@ -76,25 +76,15 @@ async fn main() {
         }
     };
 
-    // Init all feed in database
-    let mut feeds: Vec<FeedEntity> = vec![];
-    for feed in &settings.rss.feeds {
-        match feed_repository
-            .save(&Feed {
-                title: feed.title.to_string(),
-                url: feed.url.to_string(),
-                feed_type: feed.feed_type,
-                is_active: feed.is_active,
-            })
-            .await
-        {
-            Ok(entity) => feeds.push(entity),
-            Err(err) => info!("Fail to save feed {}", err),
-        }
-    }
-
     if settings.rss.enable {
         info!("Run RSS processor");
+
+        let feeds = feed_repository
+            .find_all(true)
+            .await
+            .map_err(|err| error!("Fail to find feeds: {}", err))
+            .unwrap();
+
         match rss_processor.process(&feeds).await {
             Ok(_) => info!("RSS processor finished"),
             Err(err) => {
