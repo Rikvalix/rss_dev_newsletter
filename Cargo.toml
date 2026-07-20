@@ -5,7 +5,6 @@ edition = "2024"
 
 [dependencies]
 chrono = "0.4.44"
-google-gmail1 = "7.0.0+20251215"
 tokio = { version = "1.52.1", features = ["rt", "rt-multi-thread", "macros"] }
 regex = "1.12.3"
 strum_macros = "0.28.0"
