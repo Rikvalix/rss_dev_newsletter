@@ -2,9 +2,7 @@ mode = "dev"
 
 [ai]
 enable = true
-article_summary_system_prompt_path = "ai_article_summary_system_prompt.md"
-global_summary_system_prompt_path = "ai_global_summary_system_prompt.md"
-user_prompt_path = "ai_user_message.md"
+
 
 [ai.gemini]
 api_key= ""

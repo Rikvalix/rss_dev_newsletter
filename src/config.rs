@@ -34,9 +34,6 @@ pub struct DatabaseProperties {
 #[derive(Debug, Deserialize)]
 pub struct AiProperties {
     pub enable: bool,
-    pub article_summary_system_prompt_path: String,
-    pub global_summary_system_prompt_path: String,
-    pub user_prompt_path: String,
     pub gemini : GeminiProperties,
     pub mistral: MistralProperties,
 }
