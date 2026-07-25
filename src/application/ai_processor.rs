@@ -6,13 +6,14 @@ use crate::infrastructure::database::repository::ai_summary_repository::AiSummar
 use crate::ports::ai_i::AiI;
 use log::{error, info};
 
-/// Generate summary for each emails and last one global summary which be send.
+/// Generate classification and summary for RSS items
 ///
 /// # Arguments
 ///
 /// * `ai_config`: Ai configuration
 /// * `ai_client`: Ai client, use to generate summary
-/// * `notification_client`: Notification client, share status and summary
+/// * `ai_classification_repository`: Ai classification repository
+/// * `ai_summary_repository` : AI Summary repository
 /// t `feed_items`: List of RSS items
 ///
 /// returns: ()

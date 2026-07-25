@@ -5,17 +5,13 @@ use std::{env, path::PathBuf};
 #[derive(Debug, Deserialize)]
 pub struct GlobalProperties {
     pub mode: String,
-    pub storage: StorageProperties,
     pub ai: AiProperties,
     pub notification: NotificationProperties,
     pub rss: RssProperties,
     pub database: DatabaseProperties
 }
 
-#[derive(Debug, Deserialize)]
-pub struct StorageProperties {
-    pub repository_path: String,
-}
+
 
 // Rss
 
