@@ -1602,8 +1602,7 @@ dependencies = [
 [[package]]
 name = "mistralai-client"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7152349c68495c384a3f88b3027a036656cad7be0a447d5642bc81687fdc9a8a"
+source = "git+https://github.com/Rikvalix/mistralai-client-rs#52456b6e3a0f48463b1fabac90f66be211ea3e80"
 dependencies = [
  "async-stream",
  "async-trait",
