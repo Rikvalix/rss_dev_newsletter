@@ -1,15 +1,5 @@
 mode = "dev"
 
-[tldr]
-mark_email_as_read = true
-
-[git]
-enable = false
-branch = "main"
-
-[storage]
-repository_path = "tldr_newsletter_storage"
-
 [ai]
 enable = true
 article_summary_system_prompt_path = "ai_article_summary_system_prompt.md"
