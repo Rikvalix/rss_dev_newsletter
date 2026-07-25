@@ -1,6 +1,9 @@
 use crate::config::AiProperties;
+use crate::domain::ai::model::{
+    AiClassificationItemResponse, AiClassificationResponse, AiSummaryResponse,
+};
+use crate::domain::database::model::FeedItemEntity;
 use crate::infrastructure::ai::error::AiError;
-use std::path::Path;
 
 /// Ai client interface to create summary from the differents emails
 pub trait AiI: Sized {
@@ -13,19 +16,20 @@ pub trait AiI: Sized {
     /// returns: Self
     fn new(ai_settings: &AiProperties) -> Result<Self, AiError>;
 
-    /// Generate summary for specific file
+    /// Sort RSS items to establish a classification
     ///
     /// # Arguments
     ///
-    /// * `path_file`: File with the content to summary
-    /// * `system_prompt`: Prompt system
-    /// * `user_prompt`: User prompt
+    /// * `feed_items`: RSS items
     ///
-    /// returns: impl Future<Output=Result<String, AiError>>
+    /// returns: impl Future<Output=Result<ShortFeedResponse, AiError>>
+    fn generate_classification(
+        &self,
+        items: &Vec<FeedItemEntity>,
+    ) -> impl Future<Output = Result<AiClassificationResponse, AiError>>;
+
     fn generate_summary(
         &self,
-        path_file: &Path,
-        system_prompt: &str,
-        user_prompt: &str,
-    ) -> impl Future<Output = Result<String, AiError>>;
+        items: &Vec<AiClassificationItemResponse>,
+    ) -> impl Future<Output = Result<AiSummaryResponse, AiError>>;
 }

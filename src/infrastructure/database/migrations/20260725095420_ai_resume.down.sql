@@ -1,0 +1,3 @@
+-- Add down migration script here
+DROP TABLE AI_SUMMARY;
+DROP TABLE AI_CLASSIFICATION;

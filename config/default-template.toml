@@ -43,9 +43,3 @@ database = ""
 
 [rss]
 enable = true
-
-[[rss.feeds]]
-title = "TLDR DEVOPS"
-url = "https://bullrich.dev/tldr-rss/devops.rss"
-feed_type = "DEVOPS"
-is_active = true

@@ -1,3 +1,5 @@
+use crate::domain::ai::model::{AiClassificationResponse, AiSummaryResponse};
+use sqlx::types::Json;
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct FeedEntity {
@@ -19,5 +21,22 @@ pub struct FeedItemEntity {
     pub title: String,
     pub content: Option<String>,
     pub published_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+pub struct AiClassificationEntity {
+    pub id: i64,
+    pub content: Json<AiClassificationResponse>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+pub struct AiSummaryEntity {
+    pub id: i64,
+    pub ai_classification_id: i64,
+    pub content: Json<AiSummaryResponse>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }

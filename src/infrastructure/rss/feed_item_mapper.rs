@@ -31,7 +31,6 @@ pub fn map_channel_item(item: &Item) -> FeedItem {
         title: item.title.clone().unwrap_or_default(),
         description: item.description.clone().unwrap_or_default(),
         content: item.content.clone().unwrap_or_default(),
-
         ..Default::default()
     }
 }

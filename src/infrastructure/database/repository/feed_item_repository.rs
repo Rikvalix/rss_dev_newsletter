@@ -46,4 +46,15 @@ impl FeedItemRepository {
 
         Ok(feed_item)
     }
+
+    pub async fn find_by_creation_date(&self, date: &chrono::NaiveDate) -> Result<Vec<FeedItemEntity>, sqlx::Error> {
+        let feeds = sqlx::query_as::<_, FeedItemEntity>(
+            r#"select id::bigint,feed_id::bigint,guid,url,title,content,published_at,created_at,updated_at from feed_items f
+                        where date(f.created_at) = $1
+                 "#)
+            .bind(date)
+            .fetch_all(&self.pool)
+            .await?;
+        Ok(feeds)
+    }
 }

@@ -34,6 +34,14 @@ impl FeedRepository {
         Ok(saved)
     }
 
+    pub async fn find_all(&self, is_active: bool) -> Result<Vec<FeedEntity>, sqlx::Error> {
+        let feeds = sqlx::query_as::<_, FeedEntity>("SELECT id::bigint, title, url, feed_type, is_active,created_at, updated_at FROM FEEDS f WHERE f.is_active = $1")
+            .bind(is_active)
+        .fetch_all(&self.pool)
+            .await?;
+
+        Ok(feeds)
+    }
     pub async fn find_by_title(&self, title: &str) -> Result<Option<FeedEntity>, sqlx::Error> {
         let feed = sqlx::query_as::<_, FeedEntity>("select id::bigint, title, url, feed_type, is_active, created_at, updated_at from feeds where title = $1")
             .bind(title)

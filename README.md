@@ -1,7 +1,6 @@
 # RSS Dev newsletter
 
-Fetch, store, and process emails from the [TLDR newsletter](https://tldr.tech/newsletters). Generate AI-powered
-summaries and send them to Discord.
+Fetch, store from different RSS feeds. Generate AI-powered summaries and send them to Discord.
 
 This is my first Rust project and is currently in development.
 
@@ -18,8 +17,6 @@ This is my first Rust project and is currently in development.
         - [Feed Types](#feed-types)
     - [Database](#database)
         - [Configuration](#database-configuration)
-    - [Email](#email)
-        - [Using Gmail](#using-gmail)
     - [AI](#ai)
         - [Using Gemini](#using-gemini)
         - [Using Mistral Vibe](#using-mistral-vibe)
@@ -54,15 +51,6 @@ To use the RSS processor, you need a **database**. Currently, only PostgreSQL is
 |----------|----------------------------------------|---------|
 | `enable` | If `false`, disables the RSS processor | `true`  |
 
-**Feed configuration**:
-
-| Field       | Description                                  | Default |
-|-------------|----------------------------------------------|---------|
-| `title`     | Title of the feed                            |         |
-| `url`       | URL of the feed                              |         |
-| `feed_type` | Type of feed (see [Feed Types](#feed-types)) |         |
-| `is_active` | If `false`, disables this feed               | `true`  |
-
 #### Feed Types
 
 Available feed type options:
@@ -85,28 +73,6 @@ The database is required for the RSS processor to store feed items.
 | `user`     | Database user     | `root`      |
 | `password` | Database password | `passwd`    |
 | `database` | Database name     | `example`   |
-
-### Email
-
-**Global configuration**:
-
-| Field                | Description                                       | Default |
-|----------------------|---------------------------------------------------|---------|
-| `mark_email_as_read` | If `false`, every run will pull your entire inbox | `false` |
-
-#### Using Gmail
-
-_I recommend creating a dedicated Gmail address because TLDR sends around 5 emails per day._
-
-To use Gmail, follow these steps:
-
-1. Create an application on the [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable the [Gmail API](https://console.cloud.google.com/apis/library/gmail.googleapis.com?organizationId=0&supportedpurview=project)
-   for your project
-3. Configure the OAuth 2.0 settings for your application
-4. Store the secret in `client_secret.json`
-5. On first run, the application will authenticate with your Google account and create a `token.json` file
-6. Re-run the application and enjoy!
 
 ### AI
 

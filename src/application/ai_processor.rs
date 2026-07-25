@@ -1,13 +1,10 @@
 use crate::config::AiProperties;
+use crate::domain::database::model::FeedItemEntity;
 use crate::infrastructure::ai::error::AiError;
+use crate::infrastructure::database::repository::ai_classification_repository::AiClassificationRepository;
+use crate::infrastructure::database::repository::ai_summary_repository::AiSummaryRepository;
 use crate::ports::ai_i::AiI;
-use crate::ports::notification_i::NotificationI;
-use crate::storage;
-use crate::storage::create_file;
-use crate::utils::file_format_utils::format_file_path;
-use chrono::Local;
 use log::{error, info};
-use std::path::PathBuf;
 
 /// Generate summary for each emails and last one global summary which be send.
 ///
@@ -16,71 +13,54 @@ use std::path::PathBuf;
 /// * `ai_config`: Ai configuration
 /// * `ai_client`: Ai client, use to generate summary
 /// * `notification_client`: Notification client, share status and summary
-/// * `files`: List of paths to analyse
+/// t `feed_items`: List of RSS items
 ///
 /// returns: ()
 pub async fn ai_processor(
     ai_config: &AiProperties,
     ai_client: &impl AiI,
-    notification_client: &impl NotificationI,
-    files: &[PathBuf],
+    ai_classification_repository: &AiClassificationRepository,
+    ai_summary_repository: &AiSummaryRepository,
+    feed_items: &Vec<FeedItemEntity>,
 ) -> Result<(), AiError> {
     info!("Starting AI processor");
 
-    if files.is_empty() {
-        info!("No files to process");
+    if feed_items.is_empty() {
+        info!("No items to process");
     }
 
-    info!("{} files ", files.len());
+    info!("{} items", feed_items.len());
 
-    let mut responses: Vec<String> = Vec::new();
-
-    let temporary_summary_path = "ai_summary/temporary";
-    storage::check_or_create_folder(temporary_summary_path)?;
-
-    for file in files.iter() {
-        info!("Processing file {}", file.display());
-        let response: String = ai_client.generate_summary(
-                file,
-                &ai_config.article_summary_system_prompt_path,
-                &ai_config.user_prompt_path,
-            )
-            .await
-            .map_err(|err| {
-                error!("Error while processing file {}: {}", file.display(), err);
-                err
-            })?;
-        responses.push(response);
-    }
-
-    info!("{} responses are processed", responses.len());
-
-
-
-    info!("Processing general summary");
-    let global_summary = ai_client
-        .generate_summary(
-            &PathBuf::from(format_file_path(temporary_summary_path, "temp_summary", &Local::now().date_naive()).as_str()),
-            &ai_config.global_summary_system_prompt_path,
-            &ai_config.user_prompt_path,
-        )
+    let classified_items = ai_client
+        .generate_classification(&feed_items)
         .await
         .map_err(|err| {
-            error!("Error while generating summary: {}", err);
-            err
+            error!("Failed to generate classification: {}", err);
+        })
+        .unwrap();
+
+    let classification_id: i64 = ai_classification_repository
+        .save(&classified_items)
+        .await
+        .map_err(|err| AiError {
+            message: format!("Failed to save classification: {}", err),
+        })?
+        .id;
+
+    let summary = ai_client
+        .generate_summary(&classified_items.important_articles)
+        .await
+        .map_err(|err| {
+            error!("Failed to generate summary: {}", err);
+        })
+        .unwrap();
+
+    ai_summary_repository
+        .save(&summary, &classification_id)
+        .await
+        .map_err(|err| AiError {
+            message: format!("Failed to save summary: {}", err),
         })?;
-
-    let global_summary_path = "ai_summary/global";
-    storage::check_or_create_folder(global_summary_path)?;
-
-    create_file(
-        format_file_path(global_summary_path, "summary", &Local::now().date_naive()).as_str(),
-        &global_summary,
-    )?;
-
-    notification_client
-        .send_message(global_summary.as_str())
-        .await?;
 
     Ok(())
 }
