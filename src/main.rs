@@ -1,10 +1,12 @@
+use chrono::Utc;
 use log::{error, info};
+use rss_dev_newsletter::application::ai_processor::ai_processor;
 use rss_dev_newsletter::application::rss_processor::RssProcessor;
 use rss_dev_newsletter::config::GlobalProperties;
-use rss_dev_newsletter::domain::database::model::FeedEntity;
-use rss_dev_newsletter::domain::rss::model::Feed;
-use rss_dev_newsletter::infrastructure::ai::gemini::GeminiAdapter;
+use rss_dev_newsletter::infrastructure::ai::mistral::MistralAdapter;
 use rss_dev_newsletter::infrastructure::database::init_database::init_postgres_database;
+use rss_dev_newsletter::infrastructure::database::repository::ai_classification_repository::AiClassificationRepository;
+use rss_dev_newsletter::infrastructure::database::repository::ai_summary_repository::AiSummaryRepository;
 use rss_dev_newsletter::infrastructure::database::repository::feed_item_repository::FeedItemRepository;
 use rss_dev_newsletter::infrastructure::database::repository::feed_repository::FeedRepository;
 use rss_dev_newsletter::infrastructure::notification::discord::DiscordAdapter;
@@ -28,7 +30,7 @@ async fn main() {
     };
     info!("Configuration is setup");
 
-    let _ai_client = match GeminiAdapter::new(&settings.ai) {
+    let ai_client = match MistralAdapter::new(&settings.ai) {
         Ok(a) => {
             info!("AI client is setup");
             a
@@ -39,7 +41,7 @@ async fn main() {
         }
     };
 
-    let _notification_client = match DiscordAdapter::new(&settings.notification.discord.webhook_url)
+    let notification_client = match DiscordAdapter::new(&settings.notification.discord.webhook_url)
     {
         Ok(n) => {
             info!("Notification client is setup");
@@ -64,6 +66,9 @@ async fn main() {
 
     let feed_repository: FeedRepository = FeedRepository::new(&database);
     let feed_item_repository: FeedItemRepository = FeedItemRepository::new(&database);
+    let ai_classification_repository: AiClassificationRepository =
+        AiClassificationRepository::new(&database);
+    let ai_summary_repository: AiSummaryRepository = AiSummaryRepository::new(&database);
 
     let rss_processor = match RssProcessor::new(&RssAdapter::new(), &feed_item_repository) {
         Ok(processor) => {
@@ -94,15 +99,29 @@ async fn main() {
         }
     }
 
+    let today_feeds = feed_item_repository
+        .find_by_creation_date(&Utc::now().date_naive())
+        .await
+        .map_err(|err| error!("Fail to find feeds items: {}", err))
+        .unwrap();
+
     if settings.ai.enable {
         info!("Run Ai processor");
-        // match ai_processor(&settings.ai, &ai_client, &notification_client, &files).await {
-        //     Ok(a) => a,
-        //     Err(e) => {
-        //         error!("Error during the AI processor {}", e);
-        //         std::process::exit(1);
-        //     }
-        // };
+        match ai_processor(
+            &settings.ai,
+            &ai_client,
+            &ai_classification_repository,
+            &ai_summary_repository,
+            &today_feeds,
+        )
+        .await
+        {
+            Ok(a) => a,
+            Err(e) => {
+                error!("Error during the AI processor {}", e);
+                std::process::exit(1);
+            }
+        };
     } else {
         info!("Ai processor disabled");
     }
