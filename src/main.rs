@@ -10,10 +10,13 @@ use rss_dev_newsletter::infrastructure::database::repository::ai_classification_
 use rss_dev_newsletter::infrastructure::database::repository::ai_summary_repository::AiSummaryRepository;
 use rss_dev_newsletter::infrastructure::database::repository::feed_item_repository::FeedItemRepository;
 use rss_dev_newsletter::infrastructure::database::repository::feed_repository::FeedRepository;
+use rss_dev_newsletter::infrastructure::database::repository::notification_repository::NotificationRepository;
 use rss_dev_newsletter::infrastructure::database::repository::summary_repository::SummaryRepository;
 use rss_dev_newsletter::infrastructure::markdown_generator::generator::summary_generator;
+use rss_dev_newsletter::infrastructure::notification::discord::DiscordAdapter;
 use rss_dev_newsletter::infrastructure::rss::rss_client::RssAdapter;
 use rss_dev_newsletter::ports::ai_i::AiI;
+use rss_dev_newsletter::ports::notification_i::NotificationI;
 
 #[tokio::main]
 async fn main() {
@@ -60,6 +63,7 @@ async fn main() {
         AiClassificationRepository::new(&database);
     let ai_summary_repository: AiSummaryRepository = AiSummaryRepository::new(&database);
     let summary_repository: SummaryRepository = SummaryRepository::new(&database);
+    let notification_repository: NotificationRepository = NotificationRepository::new(&database);
 
     let rss_processor = match RssProcessor::new(&RssAdapter::new(), &feed_item_repository) {
         Ok(processor) => {
@@ -98,21 +102,21 @@ async fn main() {
 
     if settings.ai.enable {
         info!("Run Ai processor");
-        let ai_summary = match ai_processor(
-            &ai_client,
-            &ai_classification_repository,
-            &ai_summary_repository,
-            &today_feeds,
-        )
-        .await
-        {
-            Ok(a) => a,
-            Err(e) => {
-                error!("Error during the AI processor {}", e);
-                std::process::exit(1);
-            }
-        };
-        //let ai_summary = ai_summary_repository.find_latest().await.unwrap();
+        // let ai_summary = match ai_processor(
+        //     &ai_client,
+        //     &ai_classification_repository,
+        //     &ai_summary_repository,
+        //     &today_feeds,
+        // )
+        // .await
+        // {
+        //     Ok(a) => a,
+        //     Err(e) => {
+        //         error!("Error during the AI processor {}", e);
+        //         std::process::exit(1);
+        //     }
+        // };
+        let ai_summary = ai_summary_repository.find_latest().await.unwrap();
 
         let markdown = summary_generator(&ai_summary.content, &today_feeds);
 
@@ -120,10 +124,25 @@ async fn main() {
             model: Some(settings.ai.mistral.model),
         };
 
-        let markdown_save = summary_repository
+        summary_repository
             .save(&ai_summary, &markdown, &metadata)
             .await
             .unwrap();
+
+        // Send notifications
+        let targets = notification_repository.get_all().await.unwrap();
+        for target in targets {
+            let client = match DiscordAdapter::new(&target.url.as_str()) {
+                Ok(client) => client,
+                Err(error) => {
+                    error!("Error when create discord client {}", error);
+                    std::process::exit(1);
+                }
+            };
+
+            
+            client.send_summary_file(&Utc::now().naive_utc().date(),&target.target_user,&markdown).await.unwrap()
+        }
     } else {
         info!("Ai processor disabled");
     }

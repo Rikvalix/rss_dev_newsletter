@@ -1,4 +1,6 @@
 use crate::ports::notification_i::NotificationI;
+use chrono::NaiveDate;
+use reqwest::multipart::{Form, Part};
 use serde_json::json;
 
 pub struct DiscordAdapter {
@@ -29,6 +31,40 @@ impl NotificationI for DiscordAdapter {
                 self.send(&current_chunk).await?;
             }
         }
+        Ok(())
+    }
+
+    async fn send_summary_file(
+        &self,
+        date: &NaiveDate,
+        user: &String,
+        markdown_content: &str,
+    ) -> Result<(), reqwest::Error> {
+        let filename = format!("summary_{}.md", date);
+
+        let file_part = Part::text(markdown_content.to_string())
+            .file_name(filename)
+            .mime_str("text/markdown")?;
+
+        let payload_json = json!({
+            "content": format!("**Bonjour {}, la V1 du brief IA du {}** est disponible ci-joint !\n*La version web est bientôt disponible !!!*",user,date),
+            "username": "Bot Aggrégateur RSS"
+        })
+            .to_string();
+
+        let form = Form::new()
+            .part("files[0]", file_part)
+            .text("payload_json", payload_json);
+
+        let response = self
+            .client
+            .post(&self.base_url)
+            .multipart(form)
+            .send()
+            .await?;
+
+        response.error_for_status()?;
+
         Ok(())
     }
 }
