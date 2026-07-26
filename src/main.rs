@@ -130,7 +130,7 @@ async fn main() {
             .unwrap();
 
         // Send notifications
-        let targets = notification_repository.get_all().await.unwrap();
+        let targets = notification_repository.get_all(true).await.unwrap();
         for target in targets {
             let client = match DiscordAdapter::new(&target.url.as_str()) {
                 Ok(client) => client,
@@ -140,7 +140,7 @@ async fn main() {
                 }
             };
 
-            
+
             client.send_summary_file(&Utc::now().naive_utc().date(),&target.target_user,&markdown).await.unwrap()
         }
     } else {
