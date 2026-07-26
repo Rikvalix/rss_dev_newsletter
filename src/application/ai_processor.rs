@@ -1,5 +1,4 @@
-use crate::config::AiProperties;
-use crate::domain::database::model::FeedItemEntity;
+use crate::domain::database::model::{AiSummaryEntity, FeedItemEntity};
 use crate::infrastructure::ai::error::AiError;
 use crate::infrastructure::database::repository::ai_classification_repository::AiClassificationRepository;
 use crate::infrastructure::database::repository::ai_summary_repository::AiSummaryRepository;
@@ -10,28 +9,24 @@ use log::{error, info};
 ///
 /// # Arguments
 ///
-/// * `ai_config`: Ai configuration
 /// * `ai_client`: Ai client, use to generate summary
 /// * `ai_classification_repository`: Ai classification repository
 /// * `ai_summary_repository` : AI Summary repository
 /// t `feed_items`: List of RSS items
 ///
-/// returns: ()
+/// returns: AiSummaryEntity
 pub async fn ai_processor(
-    ai_config: &AiProperties,
     ai_client: &impl AiI,
     ai_classification_repository: &AiClassificationRepository,
     ai_summary_repository: &AiSummaryRepository,
     feed_items: &Vec<FeedItemEntity>,
-) -> Result<(), AiError> {
+) -> Result<AiSummaryEntity, AiError> {
     info!("Starting AI processor");
 
     if feed_items.is_empty() {
         info!("No items to process");
     }
-
-    info!("{} items", feed_items.len());
-
+    
     let classified_items = ai_client
         .generate_classification(&feed_items)
         .await
@@ -56,12 +51,12 @@ pub async fn ai_processor(
         })
         .unwrap();
 
-    ai_summary_repository
+    let summary_saved = ai_summary_repository
         .save(&summary, &classification_id)
         .await
         .map_err(|err| AiError {
             message: format!("Failed to save summary: {}", err),
         })?;
 
-    Ok(())
+    Ok(summary_saved)
 }

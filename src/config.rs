@@ -57,13 +57,7 @@ pub struct MistralProperties {
 
 #[derive(Debug, Deserialize)]
 pub struct NotificationProperties {
-    pub discord: DiscordProperties
-}
-
-#[derive(Debug, Deserialize)]
-pub struct DiscordProperties {
     pub enable: bool,
-    pub webhook_url: String,
 }
 
 impl GlobalProperties {

@@ -31,4 +31,17 @@ impl AiSummaryRepository {
 
         Ok(saved)
     }
+
+    pub async fn find_latest(&self) -> Result<AiSummaryEntity, sqlx::Error> {
+        let response = sqlx::query_as::<_, AiSummaryEntity>(
+            r#"
+                SELECT id::bigint,ai_classification_id::bigint, content::json, created_at, updated_at FROM AI_SUMMARY
+                  ORDER BY ID::bigint DESC
+                  LIMIT 1
+                "#)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(response)
+    }
 }

@@ -17,9 +17,7 @@ model = "mistral-small-latest"
 
 [notification]
 
-[notification.discord]
 enable = true
-webhook_url = ""
 
 [database]
 
