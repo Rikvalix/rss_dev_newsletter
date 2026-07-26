@@ -3,7 +3,7 @@ use crate::domain::database::model::AiClassificationEntity;
 use sqlx::types::Json;
 use sqlx::PgPool;
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct AiClassificationRepository {
     pool: PgPool,
 }

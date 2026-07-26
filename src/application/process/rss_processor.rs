@@ -4,6 +4,7 @@ use crate::infrastructure::rss::feed_item_mapper::map_channel_item;
 use crate::infrastructure::rss::rss_client::RssAdapter;
 use log::info;
 
+#[derive(Clone, Debug)]
 pub struct RssProcessor {
     client: RssAdapter,
     feed_item_repository: FeedItemRepository,

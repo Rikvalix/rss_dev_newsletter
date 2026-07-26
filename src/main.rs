@@ -1,9 +1,10 @@
-use chrono::Utc;
 use log::{error, info};
-use rss_dev_newsletter::application::ai_processor::ai_processor;
-use rss_dev_newsletter::application::rss_processor::RssProcessor;
+use rss_dev_newsletter::application::process::ai_processor::AiProcessor;
+use rss_dev_newsletter::application::process::rss_processor::RssProcessor;
+use rss_dev_newsletter::application::web_server::run_web_server;
 use rss_dev_newsletter::config::GlobalProperties;
-use rss_dev_newsletter::domain::database::model::SummaryMetadata;
+use rss_dev_newsletter::domain::application::model::ApplicationConfiguration;
+use rss_dev_newsletter::domain::database::model::RepositoryRepoHandler;
 use rss_dev_newsletter::infrastructure::ai::mistral::MistralAdapter;
 use rss_dev_newsletter::infrastructure::database::init_database::init_postgres_database;
 use rss_dev_newsletter::infrastructure::database::repository::ai_classification_repository::AiClassificationRepository;
@@ -12,11 +13,9 @@ use rss_dev_newsletter::infrastructure::database::repository::feed_item_reposito
 use rss_dev_newsletter::infrastructure::database::repository::feed_repository::FeedRepository;
 use rss_dev_newsletter::infrastructure::database::repository::notification_repository::NotificationRepository;
 use rss_dev_newsletter::infrastructure::database::repository::summary_repository::SummaryRepository;
-use rss_dev_newsletter::infrastructure::markdown_generator::generator::summary_generator;
-use rss_dev_newsletter::infrastructure::notification::discord::DiscordAdapter;
 use rss_dev_newsletter::infrastructure::rss::rss_client::RssAdapter;
 use rss_dev_newsletter::ports::ai_i::AiI;
-use rss_dev_newsletter::ports::notification_i::NotificationI;
+use sqlx::PgPool;
 
 #[tokio::main]
 async fn main() {
@@ -24,7 +23,7 @@ async fn main() {
         .install_default()
         .expect("Failed to install rustls crypto provider");
 
-    env_logger::init();
+    tracing_subscriber::fmt::init();
 
     let settings = match GlobalProperties::new() {
         Ok(settings) => settings,
@@ -35,116 +34,60 @@ async fn main() {
     };
     info!("Configuration is setup");
 
-    let ai_client = match MistralAdapter::new(&settings.ai) {
-        Ok(a) => {
-            info!("AI client is setup");
-            a
-        }
-        Err(err) => {
-            error!("Fail to init the AI adapter: {}", err);
-            std::process::exit(1);
-        }
-    };
-
-    let database = match init_postgres_database(&settings.database).await {
-        Ok(database) => {
-            info!("Database is initialized");
-            database
-        }
-        Err(err) => {
+    let database = init_postgres_database(&settings.database)
+        .await
+        .unwrap_or_else(|err| {
             error!("Fail to init Postgres database {}", err);
             std::process::exit(1);
-        }
+        });
+
+    info!("Database is initialized");
+
+    let application_configuration = init_application_configuration(&settings, &database);
+
+    info!("Application configuration is initialized");
+
+    run_web_server(&application_configuration).await;
+}
+
+fn init_application_configuration(
+    settings: &GlobalProperties,
+    database: &PgPool,
+) -> ApplicationConfiguration {
+    let repository_handler = RepositoryRepoHandler {
+        ai_classification_repository: AiClassificationRepository::new(&database),
+        ai_summary_repository: AiSummaryRepository::new(&database),
+        feed_item_repository: FeedItemRepository::new(&database),
+        feed_repository: FeedRepository::new(&database),
+        notification_repository: NotificationRepository::new(&database),
+        summary_repository: SummaryRepository::new(&database),
     };
 
-    let feed_repository: FeedRepository = FeedRepository::new(&database);
-    let feed_item_repository: FeedItemRepository = FeedItemRepository::new(&database);
-    let ai_classification_repository: AiClassificationRepository =
-        AiClassificationRepository::new(&database);
-    let ai_summary_repository: AiSummaryRepository = AiSummaryRepository::new(&database);
-    let summary_repository: SummaryRepository = SummaryRepository::new(&database);
-    let notification_repository: NotificationRepository = NotificationRepository::new(&database);
+    let ai_client = MistralAdapter::new(&settings.ai).unwrap_or_else(|err| {
+        error!("Fail to init RSS processor: {err}");
+        std::process::exit(1);
+    });
 
-    let rss_processor = match RssProcessor::new(&RssAdapter::new(), &feed_item_repository) {
-        Ok(processor) => {
-            info!("RSS processor is initialized");
-            processor
-        }
-        Err(err) => {
-            error!("Fail to init RSS adapter: {}", err);
-            std::process::exit(1);
-        }
-    };
-
-    if settings.rss.enable {
-        info!("Run RSS processor");
-
-        let feeds = feed_repository
-            .find_all(true)
-            .await
-            .map_err(|err| error!("Fail to find feeds: {}", err))
-            .unwrap();
-
-        match rss_processor.process(&feeds).await {
-            Ok(_) => info!("RSS processor finished"),
-            Err(err) => {
-                error!("Fail to process RSS: {}", err);
+    let rss_processor =
+        RssProcessor::new(&RssAdapter::new(), &repository_handler.feed_item_repository)
+            .unwrap_or_else(|err| {
+                error!("Fail to init RSS processor: {err}");
                 std::process::exit(1);
-            }
-        }
-    }
+            });
 
-    let today_feeds = feed_item_repository
-        .find_by_creation_date(&Utc::now().date_naive())
-        .await
-        .map_err(|err| error!("Fail to find feeds items: {}", err))
-        .unwrap();
+    let ai_processor = AiProcessor::new(
+        ai_client,
+        &repository_handler.ai_classification_repository,
+        &repository_handler.ai_summary_repository,
+    )
+    .unwrap_or_else(|err| {
+        error!("Fail to init AI processor: {err}");
+        std::process::exit(1);
+    });
 
-    if settings.ai.enable {
-        info!("Run Ai processor");
-        let ai_summary = match ai_processor(
-            &ai_client,
-            &ai_classification_repository,
-            &ai_summary_repository,
-            &today_feeds,
-        )
-        .await
-        {
-            Ok(a) => a,
-            Err(e) => {
-                error!("Error during the AI processor {}", e);
-                std::process::exit(1);
-            }
-        };
-        //let ai_summary = ai_summary_repository.find_latest().await.unwrap();
-
-
-        let markdown = summary_generator(&ai_summary.content, &today_feeds);
-
-        let metadata = SummaryMetadata {
-            model: Some(settings.ai.mistral.model),
-        };
-
-        summary_repository
-            .save(&ai_summary, &markdown, &metadata)
-            .await
-            .unwrap();
-
-        // Send notifications
-        let targets = notification_repository.get_all(true).await.unwrap();
-        for target in targets {
-            let client = match DiscordAdapter::new(&target.url.as_str()) {
-                Ok(client) => client,
-                Err(error) => {
-                    error!("Error when create discord client {}", error);
-                    std::process::exit(1);
-                }
-            };
-
-
-            client.send_summary_file(&Utc::now().naive_utc().date(),&target.target_user,&markdown).await.unwrap()
-        }
-    } else {
-        info!("Ai processor disabled");
+    ApplicationConfiguration {
+        repositories: repository_handler,
+        rss_processor,
+        ai_processor,
     }
 }

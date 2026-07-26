@@ -3,6 +3,7 @@ use crate::domain::database::model::AiSummaryEntity;
 use sqlx::types::Json;
 use sqlx::PgPool;
 
+#[derive(Clone,Debug)]
 pub struct AiSummaryRepository {
     pool: PgPool,
 }

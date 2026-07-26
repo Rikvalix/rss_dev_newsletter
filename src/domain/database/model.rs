@@ -1,9 +1,25 @@
 use crate::domain::ai::model::{AiClassificationResponse, AiSummaryResponse};
+use crate::infrastructure::database::repository::ai_classification_repository::AiClassificationRepository;
+use crate::infrastructure::database::repository::ai_summary_repository::AiSummaryRepository;
+use crate::infrastructure::database::repository::feed_item_repository::FeedItemRepository;
+use crate::infrastructure::database::repository::feed_repository::FeedRepository;
+use crate::infrastructure::database::repository::notification_repository::NotificationRepository;
+use crate::infrastructure::database::repository::summary_repository::SummaryRepository;
 use serde::{Deserialize, Serialize};
 use sqlx::types::{Json, Uuid};
 use std::fmt;
 use std::fmt::Formatter;
 use strum_macros::EnumString;
+
+#[derive(Debug,Clone)]
+pub struct RepositoryRepoHandler {
+    pub ai_classification_repository: AiClassificationRepository,
+    pub ai_summary_repository: AiSummaryRepository,
+    pub feed_item_repository: FeedItemRepository,
+    pub feed_repository: FeedRepository,
+    pub notification_repository: NotificationRepository,
+    pub summary_repository: SummaryRepository,
+}
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct FeedEntity {

@@ -9,6 +9,7 @@ use mistralai_client::v1::chat::{
 use mistralai_client::v1::client::Client;
 use mistralai_client::v1::constants::Model;
 
+#[derive(Debug)]
 pub struct MistralAdapter {
     pub client: Client,
     pub model: Model,

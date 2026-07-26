@@ -1,6 +1,7 @@
 use crate::domain::database::model::NotificationEntity;
 use sqlx::PgPool;
 
+#[derive(Clone,Debug)]
 pub struct NotificationRepository {
     pool: PgPool,
 }
