@@ -3,10 +3,7 @@ use crate::domain::database::model::FeedItemEntity;
 use markdown_gen::markdown::{AsMarkdown, Link, Markdown};
 use regex::Regex;
 
-pub fn summary_generator(
-    summary: &AiSummaryResponse,
-    feeds: &Vec<FeedItemEntity>,
-) -> String{
+pub fn summary_generator(summary: &AiSummaryResponse, feeds: &Vec<FeedItemEntity>) -> String {
     let mut buffer = Vec::new();
     let mut md = Markdown::new(&mut buffer);
 
@@ -14,7 +11,8 @@ pub fn summary_generator(
     md.write(summary.global_title.heading(1)).unwrap();
     md.write(summary.introduction.as_str()).unwrap();
 
-    md.write("Ce résumé a été généré via l'intelligence artificielle.".italic()).unwrap();
+    md.write("Ce résumé a été généré via l'intelligence artificielle.".italic())
+        .unwrap();
 
     // Content
     let re_articles = Regex::new(r"\[\d+\]").unwrap();
@@ -40,16 +38,12 @@ pub fn summary_generator(
         md.write(section.sub_title.heading(3)).unwrap();
         md.write(new_content.into_owned().as_str()).unwrap();
 
-
         section.source_ids.iter().for_each(|id| {
-            let link = feeds.iter().find(|f| {
-                f.id == *id
-            });
+            let link = feeds.iter().find(|f| f.id == *id);
             if let Some(item) = link {
-                md.write(
-                    Link::new(item.url.clone().unwrap().as_str()).append(item.title.as_str()))
+                md.write(Link::new(item.url.clone().unwrap().as_str()).append(item.title.as_str()))
                     .unwrap();
-
+                md.write("\n").unwrap();
             }
         })
     }

@@ -102,20 +102,21 @@ async fn main() {
 
     if settings.ai.enable {
         info!("Run Ai processor");
-        let ai_summary = match ai_processor(
-            &ai_client,
-            &ai_classification_repository,
-            &ai_summary_repository,
-            &today_feeds,
-        )
-        .await
-        {
-            Ok(a) => a,
-            Err(e) => {
-                error!("Error during the AI processor {}", e);
-                std::process::exit(1);
-            }
-        };
+        // let ai_summary = match ai_processor(
+        //     &ai_client,
+        //     &ai_classification_repository,
+        //     &ai_summary_repository,
+        //     &today_feeds,
+        // )
+        // .await
+        // {
+        //     Ok(a) => a,
+        //     Err(e) => {
+        //         error!("Error during the AI processor {}", e);
+        //         std::process::exit(1);
+        //     }
+        // };
+        let ai_summary = ai_summary_repository.find_latest().await.unwrap();
 
 
         let markdown = summary_generator(&ai_summary.content, &today_feeds);
