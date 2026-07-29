@@ -17,8 +17,11 @@ impl AiClassificationRepository {
     pub async fn save(
         &self,
         item: &AiClassificationResponse,
+        feed_items: &Vec<i64>,
     ) -> Result<AiClassificationEntity, sqlx::Error> {
-        let saved = sqlx::query_as::<_, AiClassificationEntity>(
+        let mut tx = self.pool.begin().await?;
+
+        let classification = sqlx::query_as::<_, AiClassificationEntity>(
             r#"
                 INSERT INTO AI_CLASSIFICATION(content)
                 VALUES($1)
@@ -26,21 +29,35 @@ impl AiClassificationRepository {
             "#,
         )
         .bind(Json(item))
-        .fetch_one(&self.pool)
+        .fetch_one(&mut *tx)
         .await?;
 
-        Ok(saved)
+        sqlx::query(
+            r#"
+                    INSERT INTO ai_classification_feed_items (ai_classification_id, feed_item_id)
+                    SELECT $1, unnest($2::bigint[])
+                "#,
+        )
+        .bind(classification.id)
+        .bind(&feed_items.iter().map(|id| id).collect::<Vec<_>>())
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+
+        Ok(classification)
     }
-    pub async fn get_by_creation_date(&self, date: &NaiveDate) -> Result<Option<AiClassificationEntity>, sqlx::Error> {
-        let entity = sqlx::query_as::<_, AiClassificationEntity>(r#"
+    pub async fn get_by_creation_date(
+        &self,
+        date: &NaiveDate,
+    ) -> Result<Option<AiClassificationEntity>, sqlx::Error> {
+        let entity: Option<AiClassificationEntity> = sqlx::query_as::<_, AiClassificationEntity>(r#"
             SELECT id::bigint,content::json, created_at, updated_at FROM AI_CLASSIFICATION ac WHERE DATE(ac.created_at) = $1
         "#)
             .bind(date)
-            .fetch_one(&self.pool)
+            .fetch_optional(&self.pool)
             .await?;
 
-        Ok(Some(entity))
+        Ok(entity)
     }
-
-
 }

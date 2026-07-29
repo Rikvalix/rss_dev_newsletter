@@ -89,6 +89,7 @@ impl AiI for MistralAdapter {
                 json_schema,
                 Some(true),
             )),
+            tools: None,
             ..ChatParams::default()
         };
 
@@ -169,6 +170,7 @@ impl AiI for MistralAdapter {
                 json_schema,
                 Some(true),
             )),
+            tools: None,
             ..ChatParams::default()
         };
 

@@ -62,6 +62,12 @@ pub struct AiSummaryEntity {
 }
 
 #[derive(Debug, sqlx::FromRow)]
+pub struct AiSummaryWithFeedItems {
+    pub ai_summary: AiSummaryEntity,
+    pub feed_items: Vec<FeedItemEntity>,
+}
+
+#[derive(Debug, sqlx::FromRow)]
 pub struct NotificationEntity {
     pub id: i64,
     pub target: String,

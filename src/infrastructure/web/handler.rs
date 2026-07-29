@@ -19,7 +19,7 @@ impl WebHandler {
                 .clone(),
         }
     }
-    pub async fn health_status(State(state): State<Self>) -> (StatusCode, Json<HealthDto>) {
+    pub async fn health_status() -> (StatusCode, Json<HealthDto>) {
         let dto= HealthDto{active:true};
 
         (StatusCode::OK,Json(dto))

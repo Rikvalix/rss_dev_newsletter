@@ -3,7 +3,6 @@ use crate::infrastructure::database::repository::feed_item_repository::FeedItemR
 use crate::infrastructure::database::repository::feed_repository::FeedRepository;
 use crate::infrastructure::rss::feed_item_mapper::map_channel_item;
 use crate::infrastructure::rss::rss_client::RssAdapter;
-use log::info;
 
 #[derive(Clone, Debug)]
 pub struct RssProcessor {
@@ -41,11 +40,6 @@ impl RssProcessor {
             let feed_item = map_channel_item(item);
             self.feed_item_repository.save(&feed_item, &feed.id).await?;
         }
-        info!(
-            "Fetch and save {} items from the channel {}",
-            channel.items.len(),
-            channel.title
-        );
         Ok(())
     }
 }
