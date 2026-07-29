@@ -1,5 +1,6 @@
 use crate::domain::ai::model::AiSummaryResponse;
 use crate::domain::database::model::AiSummaryEntity;
+use chrono::NaiveDate;
 use sqlx::types::Json;
 use sqlx::PgPool;
 
@@ -44,5 +45,16 @@ impl AiSummaryRepository {
             .await?;
 
         Ok(response)
+    }
+
+    pub async fn get_by_creation_date(&self, date: &NaiveDate) -> Result<Option<AiSummaryEntity>, sqlx::Error> {
+        let entity = sqlx::query_as::<_, AiSummaryEntity>(r#"
+            SELECT id::bigint,ai_classification_id::bigint, content::json, created_at, updated_at FROM AI_SUMMARY ac WHERE DATE(ac.created_at) = $1
+        "#)
+            .bind(date)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(Some(entity))
     }
 }

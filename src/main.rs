@@ -69,7 +69,7 @@ fn init_application_configuration(
     });
 
     let rss_processor =
-        RssProcessor::new(&RssAdapter::new(), &repository_handler.feed_item_repository)
+        RssProcessor::new(&RssAdapter::new(), &repository_handler.feed_item_repository,&repository_handler.feed_repository)
             .unwrap_or_else(|err| {
                 error!("Fail to init RSS processor: {err}");
                 std::process::exit(1);
