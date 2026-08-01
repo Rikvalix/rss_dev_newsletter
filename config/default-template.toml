@@ -1,8 +1,10 @@
 mode = "dev"
 
+[server]
+port = 8080
+
 [ai]
 enable = true
-
 
 [ai.gemini]
 api_key= ""
@@ -14,9 +16,10 @@ endpoint = "https://api.mistral.ai/v1"
 max_retries = 5
 timeout = 120
 model = "mistral-small-latest"
+classification_agent_id=""
+summary_agent_id=""
 
 [notification]
-
 enable = true
 
 [database]

@@ -35,7 +35,6 @@ impl RssProcessor {
     /// Fetch channel content and save it
     async fn process_channel(&self, feed: &FeedEntity) -> Result<(), Box<dyn std::error::Error>> {
         let channel = self.client.fetch(&feed.url).await?;
-
         for item in &channel.items {
             let feed_item = map_channel_item(item);
             self.feed_item_repository.save(&feed_item, &feed.id).await?;

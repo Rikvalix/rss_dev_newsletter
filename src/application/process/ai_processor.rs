@@ -33,26 +33,24 @@ impl AiProcessor {
     }
 
     pub async fn process(&self) -> Result<(), AiError> {
-        // info!("Starting AI processor");
-        //
         let current_date: NaiveDate = Utc::now().naive_utc().date();
-        // let check_classification_already_generated: Option<AiClassificationEntity> = self
-        //     .ai_classification_repository
-        //     .get_by_creation_date(&current_date)
-        //     .await
-        //     .map_err(|err| {
-        //         error!(
-        //             "Fail to check if classification has been generated for {} : {}",
-        //             &current_date, err
-        //         )
-        //     })
-        //     .unwrap();
-        //
-        // if check_classification_already_generated.is_none() {
-        //     self.process_classification().await?;
-        // } else {
-        //     info!("AI classification has been already proceed");
-        // }
+        let check_classification_already_generated: Option<AiClassificationEntity> = self
+            .ai_classification_repository
+            .get_by_creation_date(&current_date)
+            .await
+            .map_err(|err| {
+                error!(
+                    "Fail to check if classification has been generated for {} : {}",
+                    &current_date, err
+                )
+            })
+            .unwrap();
+
+        if check_classification_already_generated.is_none() {
+            self.process_classification().await?;
+        } else {
+            info!("AI classification has been already proceed");
+        }
 
         let check_summary_generated: Option<AiSummaryWithFeedItems> = self
             .ai_summary_repository
@@ -97,16 +95,20 @@ impl AiProcessor {
             })
             .unwrap();
 
-        let mut selected_items_id :Vec<i64> = vec![];
+        let mut selected_items_id: Vec<i64> = vec![];
 
         classified_items.important_articles.iter().for_each(|item| {
-           if let Some(item) = today_feeds.iter().filter(|today_item| today_item.id == item.id ).next() {
-               selected_items_id.push(item.id)
-           }
+            if let Some(item) = today_feeds
+                .iter()
+                .filter(|today_item| today_item.id == item.id)
+                .next()
+            {
+                selected_items_id.push(item.id)
+            }
         });
 
         self.ai_classification_repository
-            .save(&classified_items,&selected_items_id)
+            .save(&classified_items, &selected_items_id)
             .await
             .map_err(|err| AiError {
                 message: format!("Failed to save classification: {}", err),

@@ -5,12 +5,12 @@ use crate::domain::application::model::ApplicationConfiguration;
 use crate::infrastructure::ai::mistral::MistralAdapter;
 use crate::infrastructure::rss::rss_client::RssAdapter;
 use crate::ports::ai_i::AiI;
-use log::{error, info};
+use log::{error, info, warn};
 use std::sync::Arc;
-use tokio_task_scheduler::{Scheduler, TaskBuilder};
+use tokio_cron_scheduler::{JobBuilder, JobScheduler};
 
 pub async fn init_scheduled_task(application_configuration: &ApplicationConfiguration) {
-    let scheduler = Scheduler::new();
+    let scheduler = JobScheduler::new().await.unwrap();
 
     let repository_handler = &application_configuration.repositories;
 
@@ -60,88 +60,93 @@ pub async fn init_scheduled_task(application_configuration: &ApplicationConfigur
 
     // RSS processor
     if application_configuration.config.rss.enable {
-        let rss_process_task = TaskBuilder::new("rss_processor", move || {
-            let rss_processor_clone = Arc::clone(&rss_processor);
+        let rss_processor_job = JobBuilder::new()
+            .with_timezone(chrono_tz::Europe::Paris)
+            .with_cron_job_type()
+            .with_schedule("*/30 * * * * *")
+            .unwrap()
+            .with_run_async(Box::new(move |uuid, mut locked| {
+                let rss_processor_job = Arc::clone(&rss_processor);
+                Box::pin(async move {
+                    info!("Starting scheduled RSS processing: {:?}", uuid);
+                    let next_tick = locked.next_tick_for_job(uuid).await;
+                    if let Err(err) = rss_processor_job.process().await {
+                        error!("Error during RSS processing: {}", err);
+                    }
+                    match next_tick {
+                        Ok(Some(ts)) => info!("Next time for RSS processor job is {:?}", ts),
+                        _ => warn!("Could not get next tick for RSS processor job"),
+                    }
+                })
+            }))
+            .build()
+            .unwrap();
 
-            tokio::spawn(async move {
-                info!("Starting scheduled RSS processing");
-                if let Err(err) = rss_processor_clone.process().await {
-                    error!("Error during RSS processing: {}", err);
-                }
-            });
-            Ok(())
-        })
-        .every_seconds(30)
-        .build();
-
-        let rss_processor_task = scheduler
-            .add_task(rss_process_task)
-            .await
-            .unwrap_or_else(|err| {
-                error!("Failed to initialize RSS processor task: {err}");
-                std::process::exit(1);
-            });
-        info!("Registered RSS processor task: {rss_processor_task}");
+        let _ = scheduler.add(rss_processor_job).await;
     }
 
     // AI processor
 
     if application_configuration.config.ai.enable {
-        let ai_process_task = TaskBuilder::new("ai_processor", move || {
-            let ai_processor_clone = Arc::clone(&ai_processor);
-            
-            tokio::spawn(async move {
-                info!("Starting scheduled AI processing");
-                    if let Err(err) = ai_processor_clone.process().await {
-                        error!("Error during AI processing: {:?}", err);
+        let ai_processor_job = JobBuilder::new()
+            .with_timezone(chrono_tz::Europe::Paris)
+            .with_cron_job_type()
+            .with_schedule("30 21 * * * *")
+            .unwrap()
+            .with_run_async(Box::new(move |uuid, mut locked| {
+                let ai_proc_job = Arc::clone(&ai_processor);
+                Box::pin(async move {
+                    info!("Starting scheduled AI processing: {:?}", uuid);
+                    let next_tick = locked.next_tick_for_job(uuid).await;
+                    if let Err(err) = ai_proc_job.process().await {
+                        error!("Error during AI processing: {}", err);
                     }
-            });
-            Ok(())
-        })
-        .daily()
-        .at("20:04")
-        .unwrap()
-        .build();
+                    match next_tick {
+                        Ok(Some(ts)) => info!("Next time for AI processor job is {:?}", ts),
+                        _ => warn!("Could not get next tick for AI processor job"),
+                    }
+                })
+            }))
+            .build()
+            .unwrap();
 
-        let ai_processor_task = scheduler
-            .add_task(ai_process_task)
-            .await
-            .unwrap_or_else(|err| {
-                error!("Failed to initialize AI processor task: {err}");
-                std::process::exit(1);
-            });
-        info!("Registered AI processor task: {ai_processor_task}");
+        let _ = scheduler.add(ai_processor_job).await;
     }
 
     if application_configuration.config.notification.enable {
-        let markdown_notification_task =
-            TaskBuilder::new("markdown_notification_processor", move || {
-                let markdown_notification_clone = Arc::clone(&markdown_notification_processor);
-
-                tokio::spawn(async move {
-                    info!("Starting notification processor task");
-                    if let Err(err) = markdown_notification_clone.process().await {
-                        error!("Error during notification processor task: {err}");
-                    }
-                });
-                Ok(())
-            })
-            .daily()
-            .at("22:01")
+        let markdown_notification_processor_job = JobBuilder::new()
+            .with_timezone(chrono_tz::Europe::Paris)
+            .with_cron_job_type()
+            .with_schedule("45 21 * * * *")
             .unwrap()
-            .build();
+            .with_run_async(Box::new(move |uuid, mut locked| {
+                let markdown_notification_proc_job = Arc::clone(&markdown_notification_processor);
+                Box::pin(async move {
+                    info!(
+                        "Starting scheduled Markdown / Notification processing: {:?}",
+                        uuid
+                    );
+                    let next_tick = locked.next_tick_for_job(uuid).await;
+                    if let Err(err) = markdown_notification_proc_job.process().await {
+                        error!("Error during Markdown / Notification processing: {}", err);
+                    }
+                    match next_tick {
+                        Ok(Some(ts)) => info!(
+                            "Next time for Markdown / Notification processor job is {:?}",
+                            ts
+                        ),
+                        _ => warn!(
+                            "Could not get next tick for Markdown / Notification processor job"
+                        ),
+                    }
+                })
+            }))
+            .build()
+            .unwrap();
 
-        let markdown_notification_task_registration = scheduler
-            .add_task(markdown_notification_task)
-            .await
-            .unwrap_or_else(|err| {
-                error!("Failed to initialize Markdown / Notification processor task: {err}");
-                std::process::exit(1);
-            });
-        info!(
-            "Registered Markdown / Notification processor task: {markdown_notification_task_registration}"
-        );
+        let _ = scheduler.add(markdown_notification_processor_job).await;
     }
 
-    scheduler.start().await;
+
+    scheduler.start().await.unwrap();
 }

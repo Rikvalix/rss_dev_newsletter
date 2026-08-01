@@ -5,13 +5,18 @@ use std::{env, path::PathBuf};
 #[derive(Debug, Deserialize)]
 pub struct GlobalProperties {
     pub mode: String,
+    pub server: ServerProperties,
     pub ai: AiProperties,
     pub notification: NotificationProperties,
     pub rss: RssProperties,
     pub database: DatabaseProperties
 }
 
-
+// Web server
+#[derive(Debug, Deserialize)]
+pub struct ServerProperties {
+    pub port: String
+}
 
 // Rss
 
@@ -51,6 +56,8 @@ pub struct MistralProperties {
     pub max_retries: u32,
     pub timeout: u32,
     pub model: String,
+    pub classification_agent_id:String,
+    pub summary_agent_id:String
 }
 
 // Notification
@@ -59,6 +66,8 @@ pub struct MistralProperties {
 pub struct NotificationProperties {
     pub enable: bool,
 }
+
+
 
 impl GlobalProperties {
     pub fn new() -> Result<Self, ConfigError> {
