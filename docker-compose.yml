@@ -7,7 +7,7 @@ services:
     restart: always
 
     networks:
-      - test
+      - postgres
 
     healthcheck:
       test: ["CMD","curl","-f","http://localhost:8080/api/v1/health"]
@@ -29,5 +29,5 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
 networks:
-  test:
+  postgres:
     external: true
