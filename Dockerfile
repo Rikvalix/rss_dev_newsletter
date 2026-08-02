@@ -13,6 +13,8 @@ RUN cargo build --release --bin rss_dev_newsletter
 
 FROM debian:trixie-slim AS runner
 
+RUN apt update && apt install curl -y
+
 WORKDIR /app
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
