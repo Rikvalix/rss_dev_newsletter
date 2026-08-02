@@ -85,7 +85,9 @@ impl GlobalProperties {
         let config_builder = Config::builder()
             .add_source(config::File::with_name(&format!("{}/default",path.display())))
             .add_source(config::File::with_name(&format!("{}/{}", path.display(),run_mode)).required(false))
-            .add_source(config::Environment::with_prefix("APP"));
+            .add_source(config::Environment::with_prefix("APP")
+                .separator("__")
+                .try_parsing(true));
         config_builder.build()?.try_deserialize()
     }
 }

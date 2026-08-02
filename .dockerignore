@@ -4,4 +4,4 @@ target
 *.md
 .vscode
 .env
-config/default.toml
+config/dev.toml
