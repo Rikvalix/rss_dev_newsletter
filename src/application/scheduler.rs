@@ -63,7 +63,7 @@ pub async fn init_scheduled_task(application_configuration: &ApplicationConfigur
         let rss_processor_job = JobBuilder::new()
             .with_timezone(chrono_tz::Europe::Paris)
             .with_cron_job_type()
-            .with_schedule("*/30 * * * * *")
+            .with_schedule(&application_configuration.config.rss.cron_string)
             .unwrap()
             .with_run_async(Box::new(move |uuid, mut locked| {
                 let rss_processor_job = Arc::clone(&rss_processor);
@@ -91,7 +91,7 @@ pub async fn init_scheduled_task(application_configuration: &ApplicationConfigur
         let ai_processor_job = JobBuilder::new()
             .with_timezone(chrono_tz::Europe::Paris)
             .with_cron_job_type()
-            .with_schedule("30 21 * * * *")
+            .with_schedule(&application_configuration.config.ai.cron_string)
             .unwrap()
             .with_run_async(Box::new(move |uuid, mut locked| {
                 let ai_proc_job = Arc::clone(&ai_processor);
@@ -117,7 +117,7 @@ pub async fn init_scheduled_task(application_configuration: &ApplicationConfigur
         let markdown_notification_processor_job = JobBuilder::new()
             .with_timezone(chrono_tz::Europe::Paris)
             .with_cron_job_type()
-            .with_schedule("45 21 * * * *")
+            .with_schedule(&application_configuration.config.notification.cron_string)
             .unwrap()
             .with_run_async(Box::new(move |uuid, mut locked| {
                 let markdown_notification_proc_job = Arc::clone(&markdown_notification_processor);

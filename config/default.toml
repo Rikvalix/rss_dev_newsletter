@@ -3,6 +3,7 @@ port = 8080
 
 [ai]
 enable = true
+cron_string="30 21 * * * *"
 
 [ai.gemini]
 api_key= ""
@@ -19,6 +20,7 @@ summary_agent_id=""
 
 [notification]
 enable = true
+cron_string="45 21 * * * *"
 
 [database]
 
@@ -30,3 +32,4 @@ database = ""
 
 [rss]
 enable = true
+cron_string="*/30 * * * * *"

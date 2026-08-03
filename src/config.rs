@@ -22,6 +22,7 @@ pub struct ServerProperties {
 #[derive(Debug, Deserialize)]
 pub struct RssProperties {
     pub enable: bool,
+    pub cron_string: String,
 }
 
 // Database
@@ -38,6 +39,7 @@ pub struct DatabaseProperties {
 #[derive(Debug, Deserialize)]
 pub struct AiProperties {
     pub enable: bool,
+    pub cron_string: String,
     pub gemini: GeminiProperties,
     pub mistral: MistralProperties,
 }
@@ -64,6 +66,7 @@ pub struct MistralProperties {
 #[derive(Debug, Deserialize)]
 pub struct NotificationProperties {
     pub enable: bool,
+    pub cron_string: String,
 }
 
 impl GlobalProperties {
