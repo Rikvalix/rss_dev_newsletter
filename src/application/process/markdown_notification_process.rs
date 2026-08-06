@@ -17,6 +17,7 @@ pub struct MarkdownNotificationProcessor {
     pub feed_item_repository: FeedItemRepository,
     pub notification_repository: NotificationRepository,
     pub summary_repository: SummaryRepository,
+    pub website: String
 }
 
 impl MarkdownNotificationProcessor {
@@ -25,12 +26,14 @@ impl MarkdownNotificationProcessor {
         feed_item_repository: &FeedItemRepository,
         notification_repository: &NotificationRepository,
         summary_repository: &SummaryRepository,
+        website: &String
     ) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
             ai_summary_repository: ai_summary_repository.clone(),
             feed_item_repository: feed_item_repository.clone(),
             notification_repository: notification_repository.clone(),
             summary_repository: summary_repository.clone(),
+            website: website.clone()
         })
     }
 
@@ -75,7 +78,10 @@ impl MarkdownNotificationProcessor {
             let discord = DiscordAdapter::new(&user.url);
             discord
                 .unwrap()
-                .send_summary_file(&current_date, &user.target_user, &markdown_entity.content)
+                .send_summary(
+                    &current_date, 
+                    &user.target_user,
+                     &format!("{}/{}",self.website,markdown_entity.public_id))
                 .await?;
         }
         Ok(())

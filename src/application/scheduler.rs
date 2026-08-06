@@ -51,6 +51,7 @@ pub async fn init_scheduled_task(application_configuration: &ApplicationConfigur
             &repository_handler.feed_item_repository,
             &repository_handler.notification_repository,
             &repository_handler.summary_repository,
+            &application_configuration.config.notification.website_newsletter
         )
         .unwrap_or_else(|err| {
             error!("Fail to init Markdown / Notification processor: {err}");

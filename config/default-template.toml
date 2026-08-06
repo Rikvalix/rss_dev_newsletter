@@ -23,6 +23,7 @@ summary_agent_id=""
 [notification]
 enable = true
 cron_string = "45 21 * * * *"
+website_newsletter=""
 
 [database]
 

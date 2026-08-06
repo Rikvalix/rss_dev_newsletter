@@ -1,5 +1,5 @@
 use crate::domain::database::model::{AiSummaryEntity, SummaryEntity, SummaryMetadata};
-use sqlx::types::Json;
+use sqlx::types::{Json};
 use sqlx::PgPool;
 
 #[derive(Debug,Clone)]
@@ -32,11 +32,33 @@ impl SummaryRepository {
         Ok(saved)
     }
 
+    pub async fn find_by_public_id(&self, public_id: String) -> Result<Option<SummaryEntity>, sqlx::Error> {
+        let saved = sqlx::query_as::<_,SummaryEntity>(
+            r#"SELECT id::bigint,public_id::uuid,ai_summary_id::bigint,title,content,metadata,created_at,updated_at 
+            FROM SUMMARY s WHERE s.public_id::text = $1  
+            "#)
+            .bind(public_id)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        Ok(saved)
+    }
+
     pub async fn find_latest(&self) -> Result<SummaryEntity, sqlx::Error> {
         let saved =
             sqlx::query_as::<_, SummaryEntity>("SELECT id::bigint,public_id::uuid,ai_summary_id::bigint,title,content,metadata,created_at,updated_at FROM SUMMARY ORDER BY ID::bigint DESC LIMIT 1")
                 .fetch_one(&self.pool)
                 .await?;
         Ok(saved)
+    }
+
+    pub async fn find_all(&self) -> Result<Vec<SummaryEntity>, sqlx::Error> {
+        let all = sqlx::query_as::<_,SummaryEntity>(
+            r#"SELECT id::bigint,public_id::uuid,ai_summary_id::bigint,title,content,metadata,created_at,updated_at FROM SUMMARY "#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(all)
     }
 }

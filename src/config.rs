@@ -67,6 +67,7 @@ pub struct MistralProperties {
 pub struct NotificationProperties {
     pub enable: bool,
     pub cron_string: String,
+    pub website_newsletter: String
 }
 
 impl GlobalProperties {
