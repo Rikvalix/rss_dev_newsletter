@@ -17,15 +17,33 @@ pub struct MistralAdapter {
     pub summary_agent_id: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ConversationResponse {
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ConversationResponse {
+    pub object: String,
     pub conversation_id: String,
-    pub outputs: Vec<MessageOutputEntry>,
+    pub outputs: Vec<OutputEntry>,
+    pub usage: Usage,
+    pub guardrails: Option<serde_json::Value>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct MessageOutputEntry {
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct OutputEntry {
+    pub r#object: String,
+    pub r#type: String,
+    pub created_at: String,
+    pub completed_at: String,
+    pub agent_id: String,
+    pub model: String,
+    pub id: String,
+    pub role: String,
     pub content: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Usage {
+    pub prompt_tokens: u32,
+    pub completion_tokens: u32,
+    pub total_tokens: u32,
 }
 // AiI for
 impl AiI for MistralAdapter {
