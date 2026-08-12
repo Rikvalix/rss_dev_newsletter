@@ -8,6 +8,7 @@ services:
 
     networks:
       - postgres
+      - rss_dev_newsletter
 
     healthcheck:
       test: ["CMD","curl","-f","http://localhost:8080/health"]
@@ -29,5 +30,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
 networks:
+  rss_dev_newsletter:
+    external: false
   postgres:
     external: true
