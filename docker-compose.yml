@@ -27,5 +27,6 @@ services:
 networks:
   rss_dev_newsletter:
     external: false
+    name: "rss_dev_newsletter"
   postgres:
     external: true
