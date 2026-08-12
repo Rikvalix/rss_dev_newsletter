@@ -69,13 +69,13 @@ pub async fn init_scheduled_task(application_configuration: &ApplicationConfigur
             .with_run_async(Box::new(move |uuid, mut locked| {
                 let rss_processor_job = Arc::clone(&rss_processor);
                 Box::pin(async move {
-                    info!("Starting scheduled RSS processing: {:?}", uuid);
+                    //info!("Starting scheduled RSS processing: {:?}", uuid);
                     let next_tick = locked.next_tick_for_job(uuid).await;
                     if let Err(err) = rss_processor_job.process().await {
                         error!("Error during RSS processing: {}", err);
                     }
                     match next_tick {
-                        Ok(Some(ts)) => info!("Next time for RSS processor job is {:?}", ts),
+                        Ok(Some(_)) => (),//info!("Next time for RSS processor job is {:?}", ts),
                         _ => warn!("Could not get next tick for RSS processor job"),
                     }
                 })

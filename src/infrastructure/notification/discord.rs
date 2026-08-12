@@ -1,6 +1,6 @@
 use crate::ports::notification_i::NotificationI;
 use chrono::NaiveDate;
-use reqwest::multipart::{Form};
+use reqwest::multipart::Form;
 use serde_json::json;
 
 pub struct DiscordAdapter {
@@ -9,16 +9,14 @@ pub struct DiscordAdapter {
 }
 
 impl NotificationI for DiscordAdapter {
-    
     async fn send_summary(
         &self,
         date: &NaiveDate,
         user: &String,
         url_website: &String,
     ) -> Result<(), reqwest::Error> {
-        
         let payload_json = json!({
-            "content": format!("**Bonjour {}, le brief IA du {}** est disponible à ce lien {} !*",user,date,url_website),
+            "content": format!("**Bonjour {}, le brief IA du {}** est disponible à ce [lien]({}) !*",user,date,url_website),
             "username": "Bot Aggrégateur RSS"
         })
             .to_string();
@@ -40,8 +38,8 @@ impl NotificationI for DiscordAdapter {
 }
 
 impl DiscordAdapter {
-    pub fn new(webhook_url: &str) -> Result<Self,Box<dyn std::error::Error>> {
-       let client =  DiscordAdapter {
+    pub fn new(webhook_url: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let client = DiscordAdapter {
             client: reqwest::Client::new(),
             base_url: webhook_url.to_string(),
         };
