@@ -19,13 +19,8 @@ services:
 
     environment:
       - TZ=Europe/Paris
-      - APP__AI__MISTRAL__API_KEY=${APP__AI__MISTRAL__API_KEY}
-      - APP__DATABASE__HOST=${APP__DATABASE__HOST}
-      - APP__DATABASE__PORT=${APP__DATABASE__PORT}
-      - APP__DATABASE__USER=${APP__DATABASE__USER}
-      - APP__DATABASE__PASSWORD=${APP__DATABASE__PASSWORD}
-      - APP__DATABASE__DATABASE=${APP__DATABASE__DATABASE}
-
+    env_file:
+      - .env
     volumes:
       - /etc/localtime:/etc/localtime:ro
 
