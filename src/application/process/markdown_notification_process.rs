@@ -60,8 +60,7 @@ impl MarkdownNotificationProcessor {
             &current_summary_items.feed_items,
         );
 
-        let markdown_entity = self
-            .summary_repository
+        self.summary_repository
             .save(
                 &current_summary_items.ai_summary,
                 &markdown_gen,

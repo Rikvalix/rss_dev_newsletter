@@ -1,8 +1,8 @@
 use crate::domain::ai::model::AiSummaryResponse;
 use crate::domain::database::model::{AiSummaryEntity, AiSummaryWithFeedItems, FeedItemEntity};
 use chrono::NaiveDate;
-use sqlx::types::Json;
 use sqlx::PgPool;
+use sqlx::types::Json;
 
 #[derive(Clone, Debug)]
 pub struct AiSummaryRepository {
@@ -65,7 +65,7 @@ impl AiSummaryRepository {
 
         let feed_items: Vec<FeedItemEntity> = sqlx::query_as::<_, FeedItemEntity>(
             r#"
-            SELECT FROM feed_items  fi
+            SELECT id::bigint, feed_id::bigint,guid,url,title,content,published_at, updated_at FROM feed_items  fi
                 inner join ai_classification_feed_items acfi on acfi.feed_item_id = fi.id
                 where acfi.ai_classification_id = $1
             "#,
