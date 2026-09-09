@@ -54,7 +54,7 @@ impl SummaryRepository {
 
     pub async fn find_all(&self) -> Result<Vec<SummaryEntity>, sqlx::Error> {
         let all = sqlx::query_as::<_,SummaryEntity>(
-            r#"SELECT id::bigint,public_id::uuid,ai_summary_id::bigint,title,content,metadata,created_at,updated_at FROM SUMMARY "#
+            r#"SELECT id::bigint,public_id::uuid,ai_summary_id::bigint,title,content,metadata,created_at,updated_at FROM SUMMARY ORDER BY ID DESC"#
         )
         .fetch_all(&self.pool)
         .await?;
