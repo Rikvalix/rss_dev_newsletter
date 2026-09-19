@@ -1,6 +1,6 @@
 use std::error::Error;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct RssAdapter {
     client: reqwest::Client,
 }

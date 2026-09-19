@@ -1,0 +1,32 @@
+services:
+  web:
+    container_name: "rss_dev_newsletter"
+    build:
+      dockerfile: Dockerfile
+
+    restart: always
+
+    networks:
+      - postgres
+      - rss_dev_newsletter
+
+    healthcheck:
+      test: ["CMD","curl","-f","http://localhost:8080/health"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    environment:
+      - TZ=Europe/Paris
+    env_file:
+      - .env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+networks:
+  rss_dev_newsletter:
+    external: false
+    name: "rss_dev_newsletter"
+  postgres:
+    external: true

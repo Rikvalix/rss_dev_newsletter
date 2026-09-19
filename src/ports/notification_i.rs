@@ -1,3 +1,5 @@
+use chrono::NaiveDate;
+
 /// Notification trait to share status, summary
 pub trait NotificationI {
 
@@ -6,8 +8,15 @@ pub trait NotificationI {
     ///
     /// # Arguments
     ///
-    /// * `message`: str
+    /// * `date`: NaiveDate
+    /// * `user`: String
+    /// * `url_website`: String
     ///
     /// returns: impl Future<Output=Result<(), Error>>
-    fn send_message(&self, message: &str) -> impl Future<Output = Result<(), reqwest::Error>>;
+     fn send_summary(
+        &self,
+        date: &NaiveDate,
+        user: &String,
+        url_website: &String,
+    ) -> impl Future<Output = Result<(), reqwest::Error>>;
 }

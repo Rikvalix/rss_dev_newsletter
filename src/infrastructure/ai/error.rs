@@ -1,5 +1,4 @@
 use gemini_rust::{ClientError, FilesError};
-use mistralai_client::v1::error::{ApiError, ClientError as MistralError};
 use std::fmt::Display;
 
 #[derive(Debug, Clone)]
@@ -39,24 +38,6 @@ impl From<ClientError> for AiError {
 }
 impl From<FilesError> for AiError {
     fn from(err: FilesError) -> Self {
-        AiError {
-            message: format!("{}", err),
-        }
-    }
-}
-
-// Mistral
-
-impl From<MistralError> for AiError {
-    fn from(err: MistralError) -> Self {
-        AiError {
-            message: format!("{}", err),
-        }
-    }
-}
-
-impl From<ApiError> for AiError {
-    fn from(err: ApiError) -> Self {
         AiError {
             message: format!("{}", err),
         }

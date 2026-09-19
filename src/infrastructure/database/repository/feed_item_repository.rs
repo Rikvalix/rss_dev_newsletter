@@ -2,7 +2,7 @@ use crate::domain::database::model::FeedItemEntity;
 use crate::domain::rss::model::FeedItem;
 use sqlx::PgPool;
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct FeedItemRepository {
     pool: PgPool,
 }

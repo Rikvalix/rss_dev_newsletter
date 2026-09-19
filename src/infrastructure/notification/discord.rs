@@ -1,4 +1,6 @@
 use crate::ports::notification_i::NotificationI;
+use chrono::NaiveDate;
+use reqwest::multipart::Form;
 use serde_json::json;
 
 pub struct DiscordAdapter {
@@ -7,52 +9,40 @@ pub struct DiscordAdapter {
 }
 
 impl NotificationI for DiscordAdapter {
-    // Send message on the discord webhook, split it if the len is more than 2000
-    async fn send_message(&self, message: &str) -> Result<(), reqwest::Error> {
-        if message.chars().count() <= 2000 {
-            self.send(message).await?;
-        } else {
-            let mut current_chunk = String::new();
-            let mut char_count = 0;
+    async fn send_summary(
+        &self,
+        date: &NaiveDate,
+        user: &String,
+        url_website: &String,
+    ) -> Result<(), reqwest::Error> {
+        let payload_json = json!({
+            "content": format!("**Bonjour {}, le brief IA du {}** est disponible à ce [lien]({}) !*",user,date,url_website),
+            "username": "Bot Aggrégateur RSS"
+        })
+            .to_string();
 
-            for c in message.chars() {
-                if char_count == 2000 {
-                    self.send(&current_chunk).await?;
-                    current_chunk.clear();
-                    char_count = 0;
-                }
-                current_chunk.push(c);
-                char_count += 1;
-            }
+        let form = Form::new()
+            .text("payload_json", payload_json);
 
-            if !current_chunk.is_empty() {
-                self.send(&current_chunk).await?;
-            }
-        }
+        let response = self
+            .client
+            .post(&self.base_url)
+            .multipart(form)
+            .send()
+            .await?;
+
+        response.error_for_status()?;
+
         Ok(())
     }
 }
 
 impl DiscordAdapter {
-    pub fn new(webhook_url: &str) -> Result<Self,Box<dyn std::error::Error>> {
-       let client =  DiscordAdapter {
+    pub fn new(webhook_url: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let client = DiscordAdapter {
             client: reqwest::Client::new(),
             base_url: webhook_url.to_string(),
         };
         Ok(client)
-    }
-
-    async fn send(&self, message: &str) -> Result<(), reqwest::Error> {
-        let payload = json!({
-            "content": message.to_string(),
-        });
-
-        self.client
-            .post(self.base_url.clone())
-            .json(&payload)
-            .send()
-            .await?;
-
-        Ok(())
     }
 }
