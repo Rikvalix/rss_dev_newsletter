@@ -19,7 +19,6 @@ pub struct FeedItem {
     pub title: String,
     pub description: String,
     pub content: String,
-    pub published_at: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Debug, Clone, Copy, EnumString, Serialize, Deserialize)]

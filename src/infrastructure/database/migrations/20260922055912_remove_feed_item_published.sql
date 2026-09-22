@@ -1,0 +1,2 @@
+-- Add migration script here
+ALTER TABLE FEED_ITEMS DROP COLUMN PUBLISHED_AT;
