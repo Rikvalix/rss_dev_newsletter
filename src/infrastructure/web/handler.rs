@@ -1,9 +1,10 @@
 use crate::domain::application::model::ApplicationConfiguration;
+use crate::domain::database::model::SummaryEntity;
 use crate::domain::web::model::{HealthDto, MetadataDto, NewsletterDto, NewsletterShortDto};
 use crate::infrastructure::database::repository::summary_repository::SummaryRepository;
+use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
-use axum::Json;
 
 #[derive(Debug,Clone)]
 pub struct WebHandler {
@@ -51,20 +52,25 @@ impl WebHandler {
         (StatusCode::OK,Json(Some(dto)))
     }
 
-    pub async fn get_latest_newsletter(State(state): State<Self>) -> (StatusCode, Json<NewsletterDto>) {
-        let latest_summary = state.summary_repository.find_latest().await.unwrap();
+    pub async fn get_latest_newsletter(State(state): State<Self>) -> (StatusCode, Json<Option<NewsletterDto>>) {
+        let latest_summary_opt: Option<SummaryEntity> = state.summary_repository.find_latest().await.unwrap();
+
+        if latest_summary_opt.is_none() {
+           return (StatusCode::NO_CONTENT, Json(None));
+        }
+        let entity = latest_summary_opt.unwrap();
 
         let dto = NewsletterDto {
-            public_id: latest_summary.public_id.to_string(),
-            date: latest_summary.created_at.date_naive(),
-            title: latest_summary.title.to_string(),
-            content: latest_summary.content.to_string(),
+            public_id: entity.public_id.to_string(),
+            date: entity.created_at.date_naive(),
+            title: entity.title.to_string(),
+            content: entity.content.to_string(),
             metadata: MetadataDto {
-                model: Some(latest_summary.metadata.model.clone().unwrap().to_string()),
+                model: Some(entity.metadata.model.clone().unwrap().to_string()),
             },
         };
 
-        (StatusCode::OK, Json(dto))
+        (StatusCode::OK, Json(Some(dto)))
     }
 
     pub async fn all_shorts(State(state) : State<Self>) -> (StatusCode, Json<Vec<NewsletterShortDto>>) {

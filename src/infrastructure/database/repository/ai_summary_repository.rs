@@ -34,19 +34,6 @@ impl AiSummaryRepository {
         Ok(saved)
     }
 
-    pub async fn find_latest(&self) -> Result<AiSummaryEntity, sqlx::Error> {
-        let response = sqlx::query_as::<_, AiSummaryEntity>(
-            r#"
-                SELECT id::bigint,ai_classification_id::bigint, content::json, created_at, updated_at FROM AI_SUMMARY
-                  ORDER BY ID::bigint DESC
-                  LIMIT 1
-                "#)
-            .fetch_one(&self.pool)
-            .await?;
-
-        Ok(response)
-    }
-
     pub async fn get_by_creation_date_with_feed_items(
         &self,
         date: &NaiveDate,
@@ -65,12 +52,12 @@ impl AiSummaryRepository {
 
         let feed_items: Vec<FeedItemEntity> = sqlx::query_as::<_, FeedItemEntity>(
             r#"
-            SELECT id::bigint, feed_id::bigint,guid,url,title,content,published_at, updated_at FROM feed_items  fi
+            SELECT id::bigint, feed_id::bigint,guid,url,title,content, updated_at FROM feed_items  fi
                 inner join ai_classification_feed_items acfi on acfi.feed_item_id = fi.id
                 where acfi.ai_classification_id = $1
             "#,
         )
-        .bind(ai_summary.id)
+        .bind(ai_summary.ai_classification_id)
         .fetch_all(&self.pool)
         .await?;
 
