@@ -19,16 +19,15 @@ impl FeedItemRepository {
 
         let saved = sqlx::query_as::<_, FeedItemEntity>(
             r#"
-                insert into FEED_ITEMS (feed_id, guid, title, url, content, published_at, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                RETURNING id::bigint, feed_id::bigint, guid, title, url, content, published_at, created_at, updated_at
+                insert into FEED_ITEMS (feed_id, guid, title, url, content, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING id::bigint, feed_id::bigint, guid, title, url, content, created_at, updated_at
                 "#)
             .bind(feed_id)
             .bind(&item.guid)
             .bind(&item.title)
             .bind(&item.url)
             .bind(&item.content)
-            .bind(item.published_at)
             .bind(chrono::Utc::now())
             .bind(chrono::Utc::now())
             .fetch_one(&self.pool)
@@ -39,7 +38,7 @@ impl FeedItemRepository {
 
     pub async fn find_by_guid(&self, guid: &str) -> Result<Option<FeedItemEntity>, sqlx::Error> {
         let feed_item =
-            sqlx::query_as::<_, FeedItemEntity>("SELECT id::bigint, feed_id::bigint, guid, url, title, content, published_at, created_at, updated_at FROM FEED_ITEMS WHERE guid = $1;")
+            sqlx::query_as::<_, FeedItemEntity>("SELECT id::bigint, feed_id::bigint, guid, url, title, content, created_at, updated_at FROM FEED_ITEMS WHERE guid = $1;")
                 .bind(guid)
                 .fetch_optional(&self.pool)
                 .await?;
@@ -49,7 +48,7 @@ impl FeedItemRepository {
 
     pub async fn find_by_creation_date(&self, date: &chrono::NaiveDate) -> Result<Vec<FeedItemEntity>, sqlx::Error> {
         let feeds = sqlx::query_as::<_, FeedItemEntity>(
-            r#"select id::bigint,feed_id::bigint,guid,url,title,content,published_at,created_at,updated_at from feed_items f
+            r#"select id::bigint,feed_id::bigint,guid,url,title,content,created_at,updated_at from feed_items f
                         where date(f.created_at) = $1
                  "#)
             .bind(date)

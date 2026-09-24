@@ -1,6 +1,6 @@
 use crate::domain::database::model::{AiSummaryEntity, SummaryEntity, SummaryMetadata};
-use sqlx::types::{Json};
 use sqlx::PgPool;
+use sqlx::types::Json;
 
 #[derive(Debug,Clone)]
 pub struct SummaryRepository {
@@ -44,10 +44,10 @@ impl SummaryRepository {
         Ok(saved)
     }
 
-    pub async fn find_latest(&self) -> Result<SummaryEntity, sqlx::Error> {
+    pub async fn find_latest(&self) -> Result<Option<SummaryEntity>, sqlx::Error> {
         let saved =
             sqlx::query_as::<_, SummaryEntity>("SELECT id::bigint,public_id::uuid,ai_summary_id::bigint,title,content,metadata,created_at,updated_at FROM SUMMARY ORDER BY ID::bigint DESC LIMIT 1")
-                .fetch_one(&self.pool)
+                .fetch_optional(&self.pool)
                 .await?;
         Ok(saved)
     }

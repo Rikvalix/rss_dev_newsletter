@@ -40,7 +40,6 @@ pub struct FeedItemEntity {
     pub url: Option<String>,
     pub title: String,
     pub content: Option<String>,
-    pub published_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
